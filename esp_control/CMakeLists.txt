@@ -6,3 +6,5 @@ cmake_minimum_required(VERSION 3.16)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(main)
+
+#set(EXTRA_COMPONENT_DIRS $ENV{IDF_PATH}/extra_components/ultrasonic $ENV{IDF_PATH}/extra_components/esp_idf_lib_helpers) #change to actual path to extra components directory

@@ -2,6 +2,10 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <driver/gpio.h>
+
+//HC-SR04 ultrasonic sensor library
+#include <ultrasonic.h>
+
 #define LED_PIN 13
 
 void app_main() {
