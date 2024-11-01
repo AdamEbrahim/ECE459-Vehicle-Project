@@ -1,0 +1,7 @@
+*/build
+*/sdkconfig
+*/sdkconfig.defaults
+*/sdkconfig.old
+
+.DS_Store
+*/.DS_Store
