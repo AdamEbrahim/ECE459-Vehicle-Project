@@ -7,9 +7,12 @@
 //HC-SR04 ultrasonic sensor library
 #include <ultrasonic.h>
 
+#include <driver/i2c.h>
+
 #define LED_PIN 13
 #define UT_TRIGGER_PIN 26
 #define UT_ECHO_PIN 25
+#define JETSON_INPUT 33
 
 #define TASK_STACK_SIZE 512 //default task stack size to use = 512 bytes, idk if we need to change
 
@@ -46,7 +49,7 @@ void ultrasonicTask(void* param) {
         xWasDelayed = xTaskDelayUntil(&xLastWakeTime, xFrequency); //will delay until xFrequency ticks from lastWakeUpTime
 
         if (xWasDelayed == pdFALSE) {
-            printf("Error: ultrasonic task not delayed\n");
+            //printf("Error: ultrasonic task not delayed\n");
         }
 
         utMeasureErr = ultrasonic_measure_cm(&ut, 150, &utDist); //device pointer, max dist to measure in cm, resulting distance
@@ -64,6 +67,13 @@ void ultrasonicTask(void* param) {
     }
 
 }
+
+
+static void IRAM_ATTR handleJetsonInput(void* arg) {
+
+    
+}
+
 
 void app_main() {
     //spawn tasks in app_main
@@ -83,6 +93,25 @@ void app_main() {
     TaskHandle_t utTaskHandle = NULL;
     static uint8_t ucParameterToPass; //parameter must exist for lifetime of task (so it is static)
     xTaskCreate(ultrasonicTask, "ultrasonic", TASK_STACK_SIZE, &ucParameterToPass, tskIDLE_PRIORITY+1, &utTaskHandle); //lowest priority+1
+
+    
+    //IMU GPIO + TASK SETUP
+
+
+
+    //SERIAL I2C CONNECTION BETWEEN ESP AND JETSON
+    i2c_config_t i2c_conf = {
+        .mode = I2C_MODE_MASTER,
+        .sda_io_num = EXAMPLE_PIN_NUM_SDA,
+        .scl_io_num = EXAMPLE_PIN_NUM_SCL,
+        .sda_pullup_en = GPIO_PULLUP_ENABLE,
+        .scl_pullup_en = GPIO_PULLUP_ENABLE,
+        .master.clk_speed = EXAMPLE_LCD_PIXEL_CLOCK_HZ,
+    };
+
+
+    gpio_install_isr_service(0);
+    gpio_isr_handler_add(JETSON_INPUT, handleJetsonInput, (void*) JETSON_INPUT);
 
 
     // while (1) {
