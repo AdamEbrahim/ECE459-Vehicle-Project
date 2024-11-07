@@ -3,6 +3,7 @@
 #include <freertos/task.h>
 #include <driver/gpio.h>
 #include "esp_err.h"
+#include <string.h>
 
 //HC-SR04 ultrasonic sensor library
 #include <ultrasonic.h>
@@ -13,6 +14,14 @@
 #define UT_TRIGGER_PIN 26
 #define UT_ECHO_PIN 25
 #define JETSON_INPUT 33
+
+#define ESP32_I2C_PIN_SDA 23
+#define ESP32_I2C_PIN_SCL 22
+#define I2C_MASTER_FREQ_HZ 10000
+#define JETSON_SLAVE_ADDRESS 1
+#define TICKS_BEFORE_TIMEOUT 1
+#define I2C_ACK_EN 0
+#define I2C_BUF_LEN 8
 
 #define TASK_STACK_SIZE 512 //default task stack size to use = 512 bytes, idk if we need to change
 
@@ -92,7 +101,7 @@ void app_main() {
 
     TaskHandle_t utTaskHandle = NULL;
     static uint8_t ucParameterToPass; //parameter must exist for lifetime of task (so it is static)
-    xTaskCreate(ultrasonicTask, "ultrasonic", TASK_STACK_SIZE, &ucParameterToPass, tskIDLE_PRIORITY+1, &utTaskHandle); //lowest priority+1
+    //xTaskCreate(ultrasonicTask, "ultrasonic", TASK_STACK_SIZE, &ucParameterToPass, tskIDLE_PRIORITY+1, &utTaskHandle); //lowest priority+1
 
     
     //IMU GPIO + TASK SETUP
@@ -101,21 +110,40 @@ void app_main() {
 
     //SERIAL I2C CONNECTION BETWEEN ESP AND JETSON
     i2c_config_t i2c_conf = {
-        .mode = I2C_MODE_MASTER,
-        .sda_io_num = EXAMPLE_PIN_NUM_SDA,
-        .scl_io_num = EXAMPLE_PIN_NUM_SCL,
-        .sda_pullup_en = GPIO_PULLUP_ENABLE,
-        .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = EXAMPLE_LCD_PIXEL_CLOCK_HZ,
+        .mode = I2C_MODE_MASTER, //esp = master
+        .sda_io_num = ESP32_I2C_PIN_SDA,
+        .scl_io_num = ESP32_I2C_PIN_SCL,
+        .sda_pullup_en = GPIO_PULLUP_DISABLE, //i think jetson has pullups already on i2c
+        .scl_pullup_en = GPIO_PULLUP_DISABLE,
+        .master.clk_speed = I2C_MASTER_FREQ_HZ,
     };
+    esp_err_t err = i2c_param_config(I2C_NUM_0, &i2c_conf); //port 0
+    err = i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0); //port 0
+
+    char buf[I2C_BUF_LEN];
+    memset(buf, 'b', I2C_BUF_LEN);
+
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    err = i2c_master_start(cmd);
+    err = i2c_master_write_byte(cmd, JETSON_SLAVE_ADDRESS, I2C_ACK_EN);
+    err = i2c_master_write(cmd, (uint8_t*) buf, I2C_BUF_LEN, I2C_ACK_EN);
+    err = i2c_master_stop(cmd);
+    err = i2c_master_cmd_begin(I2C_NUM_0, cmd, TICKS_BEFORE_TIMEOUT);
+    i2c_cmd_link_delete(cmd);
 
 
     gpio_install_isr_service(0);
     gpio_isr_handler_add(JETSON_INPUT, handleJetsonInput, (void*) JETSON_INPUT);
 
+    io_conf.pin_bit_mask = (1ULL << 13);
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    gpio_config(&io_conf);
 
-    // while (1) {
-        
-    // }
+    int currVal = 0;
+    while (1) {
+        currVal = !currVal;
+        gpio_set_level(13, currVal);
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
+    }
 
 }
