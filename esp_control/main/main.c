@@ -17,8 +17,9 @@
 
 #define ESP32_I2C_PIN_SDA 23
 #define ESP32_I2C_PIN_SCL 22
-#define I2C_MASTER_FREQ_HZ 400000 //400khz i think
+#define I2C_MASTER_FREQ_HZ 400000
 #define JETSON_SLAVE_ADDRESS 1
+#define ESP_SLAVE_ADDRESS 0x48
 #define TICKS_BEFORE_TIMEOUT 1
 #define I2C_ACK_EN 0
 #define I2C_BUF_LEN 8
@@ -135,11 +136,10 @@ void app_main() {
         .mode = I2C_MODE_SLAVE, //esp = slave
         .sda_io_num = ESP32_I2C_PIN_SDA,
         .scl_io_num = ESP32_I2C_PIN_SCL,
-        .sda_pullup_en = GPIO_PULLUP_ENABLE, //i think jetson has pullups already on i2c
-        .scl_pullup_en = GPIO_PULLUP_ENABLE,
+        .sda_pullup_en = GPIO_PULLUP_DISABLE, //i think jetson has pullups already on i2c
+        .scl_pullup_en = GPIO_PULLUP_DISABLE,
         .slave.addr_10bit_en = 0,
-        .slave.slave_addr = 0x0f,
-        .slave.maximum_speed = I2C_MASTER_FREQ_HZ
+        .slave.slave_addr = ESP_SLAVE_ADDRESS, //DO NOT SET SLAVE MAX SPEED IT MESSES STUFF UP
     };
     esp_err_t err = i2c_param_config(I2C_NUM_0, &i2c_conf); //port 0
     err = i2c_driver_install(I2C_NUM_0, I2C_MODE_SLAVE, 2048, 2048, 0); //port 0
@@ -161,13 +161,16 @@ void app_main() {
         // currVal = !currVal;
         // gpio_set_level(13, currVal);
         // vTaskDelay(5000 / portTICK_PERIOD_MS);
-        int res = i2c_slave_read_buffer(I2C_NUM_0, (uint8_t*) buf, 2048, 0);
+        int res = i2c_slave_read_buffer(I2C_NUM_0, (uint8_t*) buf, 2048, 1000 / portTICK_PERIOD_MS);
         printf("Received data: ");
-        for (int i = 0; i < I2C_BUF_LEN; i++) {
-            printf("%c", buf[i]);
+        for (int i = 0; i < 2048; i++) {
+            //printf("0x%02X", buf[i]);
+            printf("%d", buf[i]);
         }
         printf("\n");
-        vTaskDelay(5000 / portTICK_PERIOD_MS);
+        printf("bytes read: %d\n", res);
+        memset(buf, 0, 2048); //reset buffer
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
 
 }
