@@ -17,7 +17,7 @@
 
 #define ESP32_I2C_PIN_SDA 23
 #define ESP32_I2C_PIN_SCL 22
-#define I2C_MASTER_FREQ_HZ 10000
+#define I2C_MASTER_FREQ_HZ 400000 //400khz i think
 #define JETSON_SLAVE_ADDRESS 1
 #define TICKS_BEFORE_TIMEOUT 1
 #define I2C_ACK_EN 0
@@ -109,40 +109,64 @@ void app_main() {
 
 
     //SERIAL I2C CONNECTION BETWEEN ESP AND JETSON
+    // i2c_config_t i2c_conf = {
+    //     .mode = I2C_MODE_MASTER, //esp = master
+    //     .sda_io_num = ESP32_I2C_PIN_SDA,
+    //     .scl_io_num = ESP32_I2C_PIN_SCL,
+    //     .sda_pullup_en = GPIO_PULLUP_DISABLE, //i think jetson has pullups already on i2c
+    //     .scl_pullup_en = GPIO_PULLUP_DISABLE,
+    //     .master.clk_speed = I2C_MASTER_FREQ_HZ,
+    // };
+    // esp_err_t err = i2c_param_config(I2C_NUM_0, &i2c_conf); //port 0
+    // err = i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0); //port 0
+
+    // char buf[I2C_BUF_LEN];
+    // memset(buf, 'b', I2C_BUF_LEN);
+
+    // i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    // err = i2c_master_start(cmd);
+    // err = i2c_master_write_byte(cmd, JETSON_SLAVE_ADDRESS, I2C_ACK_EN);
+    // err = i2c_master_write(cmd, (uint8_t*) buf, I2C_BUF_LEN, I2C_ACK_EN);
+    // err = i2c_master_stop(cmd);
+    // err = i2c_master_cmd_begin(I2C_NUM_0, cmd, TICKS_BEFORE_TIMEOUT);
+    // i2c_cmd_link_delete(cmd);
+
     i2c_config_t i2c_conf = {
-        .mode = I2C_MODE_MASTER, //esp = master
+        .mode = I2C_MODE_SLAVE, //esp = slave
         .sda_io_num = ESP32_I2C_PIN_SDA,
         .scl_io_num = ESP32_I2C_PIN_SCL,
-        .sda_pullup_en = GPIO_PULLUP_DISABLE, //i think jetson has pullups already on i2c
-        .scl_pullup_en = GPIO_PULLUP_DISABLE,
-        .master.clk_speed = I2C_MASTER_FREQ_HZ,
+        .sda_pullup_en = GPIO_PULLUP_ENABLE, //i think jetson has pullups already on i2c
+        .scl_pullup_en = GPIO_PULLUP_ENABLE,
+        .slave.addr_10bit_en = 0,
+        .slave.slave_addr = 0x0f,
+        .slave.maximum_speed = I2C_MASTER_FREQ_HZ
     };
     esp_err_t err = i2c_param_config(I2C_NUM_0, &i2c_conf); //port 0
-    err = i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0); //port 0
+    err = i2c_driver_install(I2C_NUM_0, I2C_MODE_SLAVE, 2048, 2048, 0); //port 0
 
-    char buf[I2C_BUF_LEN];
-    memset(buf, 'b', I2C_BUF_LEN);
+    char buf[2048];
+    memset(buf, 0, 2048);
 
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    err = i2c_master_start(cmd);
-    err = i2c_master_write_byte(cmd, JETSON_SLAVE_ADDRESS, I2C_ACK_EN);
-    err = i2c_master_write(cmd, (uint8_t*) buf, I2C_BUF_LEN, I2C_ACK_EN);
-    err = i2c_master_stop(cmd);
-    err = i2c_master_cmd_begin(I2C_NUM_0, cmd, TICKS_BEFORE_TIMEOUT);
-    i2c_cmd_link_delete(cmd);
 
 
     gpio_install_isr_service(0);
     gpio_isr_handler_add(JETSON_INPUT, handleJetsonInput, (void*) JETSON_INPUT);
 
-    io_conf.pin_bit_mask = (1ULL << 13);
-    io_conf.mode = GPIO_MODE_OUTPUT;
-    gpio_config(&io_conf);
+    // io_conf.pin_bit_mask = (1ULL << 13);
+    // io_conf.mode = GPIO_MODE_OUTPUT;
+    // gpio_config(&io_conf);
 
-    int currVal = 0;
+    // int currVal = 0;
     while (1) {
-        currVal = !currVal;
-        gpio_set_level(13, currVal);
+        // currVal = !currVal;
+        // gpio_set_level(13, currVal);
+        // vTaskDelay(5000 / portTICK_PERIOD_MS);
+        int res = i2c_slave_read_buffer(I2C_NUM_0, (uint8_t*) buf, 2048, 0);
+        printf("Received data: ");
+        for (int i = 0; i < I2C_BUF_LEN; i++) {
+            printf("%c", buf[i]);
+        }
+        printf("\n");
         vTaskDelay(5000 / portTICK_PERIOD_MS);
     }
 
