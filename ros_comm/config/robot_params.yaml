@@ -1,0 +1,58 @@
+# Robot Controller Parameters
+robot_controller:
+  ros__parameters:
+    default_speed: 50
+    slow_speed: 25
+    stop_distance: 1.0  # meters
+    turn_speed: 35
+    state_update_rate: 10.0  # Hz
+
+# Perception Parameters
+perception:
+  ros__parameters:
+    detection_threshold: 0.7
+    min_detection_size: 50  # pixels
+    max_detection_distance: 3.0  # meters
+    processing_rate: 20.0  # Hz
+
+# Computer Vision Parameters
+computer_vision:
+  ros__parameters:
+    camera_width: 1280
+    camera_height: 720
+    frame_rate: 30
+    model_confidence: 0.5
+    detection_classes: [
+      "person",
+      "stop sign",
+      "yield sign",
+      "traffic light",
+      "speed limit 30",
+      "speed limit 50",
+      "speed limit 70",
+      "school zone"
+    ]
+    # Simulated detection probabilities (for dummy model)
+    detection_probabilities:
+      person: 0.3
+      stop sign: 0.4
+      yield sign: 0.4
+      traffic light: 0.4
+      speed limit 30: 0.3
+      speed limit 50: 0.3
+      speed limit 70: 0.3
+      school zone: 0.3
+
+# ESP Motor Control Parameters
+motor_controller:
+  ros__parameters:
+    # Hardware settings
+    i2c_address: 0x48
+    i2c_bus: 1
+    command_rate: 50.0  # Hz
+    
+    # Runtime settings
+    speed_levels:
+      slow: 25      # Maps to SPEED_SLOW (0x10)
+      normal: 50    # Maps to SPEED_NORMAL (0x20)
+      fast: 75      # Maps to SPEED_CUSTOM with value
