@@ -68,20 +68,13 @@ class ESPForwarder(Node):
         self.command_sub = self.create_subscription(
             String,
             'motor_commands',
-            self.handle_command,
+            self.command_callback,
             10
         )
         
         self.get_logger().info('ESP Forwarder initialized')
         
-        # Subscribe to motor commands
-        self.subscription = self.create_subscription(
-            String,
-            'motor_commands',
-            self.command_callback,
-            10
-        )
-        
+        # Get speed parameters
         self.slow_speed = self.get_parameter('speed_levels.slow').value
         self.normal_speed = self.get_parameter('speed_levels.normal').value
         self.fast_speed = self.get_parameter('speed_levels.fast').value

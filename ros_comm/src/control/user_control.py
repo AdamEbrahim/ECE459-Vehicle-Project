@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
@@ -5,11 +6,12 @@ import socket
 import threading
 import time
 
-class MinimalPublisher(Node):
+class UserControl(Node):
     def __init__(self):
-        super().__init__('minimal_publisher')
-        self.publisher_ = self.create_publisher(String, 'topic', 10)
-        self.i = 0
+        super().__init__('user_control')
+        self.publisher_ = self.create_publisher(String, 'user_commands', 10)
+        
+        # Start socket server in a separate thread
         self.socket_thread = threading.Thread(target=self.start_server)
         self.socket_thread.daemon = True
         self.socket_thread.start()
@@ -17,68 +19,77 @@ class MinimalPublisher(Node):
         # Timer to periodically send a default message if there's no activity
         self.timer_period = 1.0  # seconds
         self.last_received_time = time.time()
-        self.default_message = 'Idle'
         self.timer = self.create_timer(self.timer_period, self.check_inactivity)
+        
+        self.get_logger().info('User Control initialized')
+        self.get_logger().info('Listening for commands on port 12000')
 
     def start_server(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.bind(('0.0.0.0', 12000))
         server_socket.listen(1)
-        self.get_logger().info('Server is listening on port 12000')
 
-        conn, addr = server_socket.accept()
-        self.get_logger().info(f'Connection established with {addr}')
-        old_response = 'w'
+        
+        while True:
+            conn, addr = server_socket.accept()
+            self.get_logger().info(f'Connection established with {addr}')
+            last_command = None
 
-        while rclpy.ok():
-            data = conn.recv(1024)
-            if not data:
-                continue 
+            while rclpy.ok():
+                try:
+                    data = conn.recv(1024)
+                    if not data:
+                        break
 
-            self.last_received_time = time.time()
+                    self.last_received_time = time.time()
+                    command = data.decode().lower()
 
-            decode_data = data.decode()
-            if decode_data == 'w':
-                response = 'Forward'
-            elif decode_data == 'a':
-                response = 'Left'
-            elif decode_data == 's':
-                response = 'Down'
-            elif decode_data == 'd':
-                response = 'Right'
-            else:
-                response = old_response
+                    # Map commands to robot controller format
+                    if command == 'w':
+                        msg = 'FORWARD'
+                    elif command == 'a':
+                        msg = 'LEFT'
+                    elif command == 's':
+                        msg = 'BACKWARD'
+                    elif command == 'd':
+                        msg = 'RIGHT'
+                    elif command == 'x':
+                        msg = 'STOP'
+                    else:
+                        msg = last_command if last_command else 'STOP'
 
-            old_response = decode_data
-            self.get_logger().info(f'Received: {decode_data}')
-            self.publish_response(response)
+                    if msg:
+                        last_command = msg
+                        message = String()
+                        message.data = msg
+                        self.publisher_.publish(message)
+                        self.get_logger().debug(f'Published: {msg}')
 
-            conn.sendall(response.encode())
+                except Exception as e:
+                    self.get_logger().error(f'Error handling connection: {e}')
+                    break
 
-        conn.close()
-        server_socket.close()
-
-    def publish_response(self, response):
-        msg = String()
-        msg.data = response
-        self.publisher_.publish(msg)
-        self.get_logger().info(f'Publishing: "{msg.data}"')
+            conn.close()
+            self.get_logger().info('Connection closed')
 
     def check_inactivity(self):
-        """Check if enough time has passed since the last received data."""
+        """Stop the robot if no commands received for a while"""
         if time.time() - self.last_received_time > self.timer_period:
-            self.publish_response(self.default_message)
-    
+            message = String()
+            message.data = 'STOP'
+            self.publisher_.publish(message)
 
 def main(args=None):
     rclpy.init(args=args)
-
-    minimal_publisher = MinimalPublisher()
-
-    rclpy.spin(minimal_publisher)
-
-    minimal_publisher.destroy_node()
-    rclpy.shutdown()
+    user_control = UserControl()
+    
+    try:
+        rclpy.spin(user_control)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        user_control.destroy_node()
+        rclpy.shutdown()
 
 
 if __name__ == '__main__':

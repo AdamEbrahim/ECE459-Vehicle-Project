@@ -3,11 +3,13 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 from enum import Enum, auto
+import re
 
 class RobotState(Enum):
-    SPEED_LIMITED = auto()
-    STOPPING = auto()
-    SLOWING = auto()
+    SPEED_LIMITED = auto()  # Following a speed limit
+    STOPPING = auto()       # Coming to a stop
+    SLOWING = auto()        # Temporary slow down
+    NORMAL = auto()         # Normal operation
 
 class RobotController(Node):
     def __init__(self):
@@ -28,8 +30,9 @@ class RobotController(Node):
         update_rate = self.get_parameter('state_update_rate').value
         
         # Initialize state
-        self.current_state = RobotState.SPEED_LIMITED
+        self.current_state = RobotState.NORMAL
         self.last_command = None
+        self.current_speed_limit = self.default_speed
         
         # Publishers and subscribers
         self.command_publisher = self.create_publisher(
@@ -56,7 +59,7 @@ class RobotController(Node):
         self.create_timer(1.0/update_rate, self.update_state)
         
         self.get_logger().info('Robot Controller initialized')
-        self.get_logger().info(f'Default speed: {self.default_speed}, Slow speed: {self.slow_speed}')
+        self.get_logger().info(f'Default speed: {self.default_speed}')
     
     def update_state(self):
         """Update robot state and apply appropriate speed modifications"""
@@ -69,7 +72,10 @@ class RobotController(Node):
         elif self.current_state == RobotState.SLOWING:
             cmd = f"{self.last_command}_{self.slow_speed}"
             self.command_publisher.publish(String(data=cmd))
-        else:  # SPEED_LIMITED
+        elif self.current_state == RobotState.SPEED_LIMITED:
+            cmd = f"{self.last_command}_{self.current_speed_limit}"
+            self.command_publisher.publish(String(data=cmd))
+        else:  # NORMAL
             cmd = f"{self.last_command}_{self.default_speed}"
             self.command_publisher.publish(String(data=cmd))
     
@@ -82,10 +88,17 @@ class RobotController(Node):
             self.last_command = None
         else:
             self.last_command = command
-            # State remains unchanged
+            # Keep current state unchanged
     
     def handle_perception_command(self, msg):
-        """Handle commands from perception system"""
+        """
+        Handle commands from perception system
+        Commands can be:
+        - STOP_DETECTED: Emergency stop
+        - SLOW_DOWN: Temporary slow down
+        - SPEED_X: Set speed limit to X (e.g., SPEED_30)
+        - CLEAR: Resume normal operation
+        """
         command = msg.data
         
         if command == 'STOP_DETECTED':
@@ -93,7 +106,16 @@ class RobotController(Node):
         elif command == 'SLOW_DOWN':
             self.current_state = RobotState.SLOWING
         elif command == 'CLEAR':
-            self.current_state = RobotState.SPEED_LIMITED
+            self.current_state = RobotState.NORMAL
+            self.current_speed_limit = self.default_speed
+        else:
+            # Check for speed limit commands (SPEED_X)
+            speed_match = re.match(r'SPEED_(\d+)', command)
+            if speed_match:
+                speed = int(speed_match.group(1))
+                self.current_speed_limit = min(speed, self.default_speed)
+                self.current_state = RobotState.SPEED_LIMITED
+                self.get_logger().info(f'Speed limit set to {self.current_speed_limit}')
 
 def main(args=None):
     rclpy.init(args=args)
