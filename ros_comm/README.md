@@ -160,6 +160,12 @@ To modify these parameters:
    # Monitor perception commands
    ros2 topic echo /perception_commands
    ```
+   - These will allow you to see the data flowing through the system
+      - Objects Detected by CV model: `detected_objects`
+      - Commands decided from detections: `perception_commands`
+      - Motor Commands sent to ESP: `motor_commands`
+      - User Commands received from Laptop: `user_commands`
+
 
 3. **View node graph**
    ```bash
