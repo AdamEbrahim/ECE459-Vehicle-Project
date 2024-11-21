@@ -66,7 +66,16 @@ class DummyCVModel(Node):
                     'confidence': round(random.uniform(self.model_confidence, 1.0), 3),
                     'bbox': self._generate_bbox()
                 }
+
+                # Add specific details for certain classes
+                if 'speed limit' in obj_class:
+                    speed = int(obj_class.split()[-1])  # Extract speed value from class name
+                    detection['speed_value'] = speed
+                elif obj_class == 'traffic light':
+                    detection['color'] = random.choice(['red', 'yellow', 'green'])
+                    
                 detections.append(detection)
+
         
         # Create message
         if detections:

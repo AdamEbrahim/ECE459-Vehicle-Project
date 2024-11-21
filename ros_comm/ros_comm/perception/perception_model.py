@@ -41,6 +41,8 @@ class PerceptionModel(Node):
         """Process detections and issue appropriate commands"""
         try:
             detections = json.loads(msg.data)
+            self.get_logger().info(f'Processing detections: {msg.data}')
+            
             highest_priority_command = None
             highest_priority = -1
             
@@ -48,7 +50,10 @@ class PerceptionModel(Node):
                 obj_class = detection['class']
                 confidence = detection['confidence']
                 
+                self.get_logger().info(f'Checking detection: {obj_class} (confidence: {confidence})')
+                
                 if confidence < self.detection_threshold:
+                    self.get_logger().info(f'Skipping {obj_class} - confidence too low')
                     continue
                 
                 # Priority-based command selection
@@ -66,6 +71,7 @@ class PerceptionModel(Node):
                     priority = 80
                 elif obj_class == "traffic light":
                     color = detection.get('color', 'unknown')
+                    self.get_logger().info(f'Traffic light color: {color}')
                     if color == 'red':
                         command = "STOP"
                         priority = 90
@@ -74,21 +80,27 @@ class PerceptionModel(Node):
                         priority = 70
                 elif "speed limit" in obj_class:
                     speed = detection.get('speed_value', 0)
+                    self.get_logger().info(f'Speed limit value: {speed}')
                     command = f"SPEED_{speed}"
                     priority = 50
                 elif obj_class == "school zone":
                     command = "SPEED_30"  # Force slow speed in school zones
                     priority = 60
                 
+                self.get_logger().info(f'Generated command for {obj_class}: {command} (priority: {priority})')
+                
                 if command and priority > highest_priority:
                     highest_priority_command = command
                     highest_priority = priority
+                    self.get_logger().info(f'New highest priority command: {command}')
             
             if highest_priority_command:
                 cmd_msg = String()
                 cmd_msg.data = highest_priority_command
                 self.command_publisher.publish(cmd_msg)
-                self.get_logger().info(f'Issued command: {highest_priority_command}')
+                self.get_logger().info(f'Published final command: {highest_priority_command}')
+            else:
+                self.get_logger().info('No command issued')
         
         except json.JSONDecodeError as e:
             self.get_logger().error(f'Failed to parse detection JSON: {e}')
@@ -98,7 +110,6 @@ class PerceptionModel(Node):
 def main(args=None):
     rclpy.init(args=args)
     perception = PerceptionModel()
-    
     try:
         rclpy.spin(perception)
     except KeyboardInterrupt:
