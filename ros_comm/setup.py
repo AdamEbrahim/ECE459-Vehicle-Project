@@ -31,4 +31,13 @@ setup(
             'user_control = ros_comm.control.user_control:main',
         ],
     },
+    package_dir={'': '.'},
+    scripts=[],
+    py_modules=[
+        'ros_comm.computer_vision.dummy_cv_model',
+        'ros_comm.perception.perception_model',
+        'ros_comm.control.robot_controller',
+        'ros_comm.esp.esp_forwarder2',
+        'ros_comm.control.user_control'
+    ]
 )
