@@ -13,7 +13,14 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),
-        (os.path.join('share', package_name, 'config'), glob('config/*.yaml'))
+        (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
+        (os.path.join('lib', package_name), [
+            'ros_comm/computer_vision/dummy_cv_model.py',
+            'ros_comm/perception/perception_model.py',
+            'ros_comm/control/robot_controller.py',
+            'ros_comm/esp/esp_forwarder2.py',
+            'ros_comm/control/user_control.py'
+        ])
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -30,12 +37,5 @@ setup(
             'esp_forwarder = ros_comm.esp.esp_forwarder2:main',
             'user_control = ros_comm.control.user_control:main',
         ],
-    },
-    scripts=[
-        'ros_comm/computer_vision/dummy_cv_model.py',
-        'ros_comm/perception/perception_model.py',
-        'ros_comm/control/robot_controller.py',
-        'ros_comm/esp/esp_forwarder2.py',
-        'ros_comm/control/user_control.py'
-    ]
+    }
 )
