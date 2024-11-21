@@ -4,8 +4,8 @@ package_name = 'ros_comm'
 
 setup(
     name=package_name,
-    version='0.0.1',
-    packages=[package_name],  # ros_comm for Python imports
+    version='0.0.0',  # Match version with package.xml
+    packages=[package_name],
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
