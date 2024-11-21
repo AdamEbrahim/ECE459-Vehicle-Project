@@ -5,7 +5,7 @@ robot_controller:
     slow_speed: 25
     stop_distance: 1.0  # meters
     turn_speed: 35
-    state_update_rate: 10.0  # Hz
+    state_update_rate: 1.0  # Hz - Reduced to match slower detection rate
 
 # Perception Parameters
 perception:
@@ -13,14 +13,14 @@ perception:
     detection_threshold: 0.7
     min_detection_size: 50  # pixels
     max_detection_distance: 3.0  # meters
-    processing_rate: 2.0  # Hz
+    processing_rate: 0.5  # Hz - Slightly faster than CV model's 1/3 Hz
 
 # Computer Vision Parameters
 computer_vision:
   ros__parameters:
     camera_width: 1280
     camera_height: 720
-    frame_rate: 0.5
+    frame_rate: 0.33  # Hz - One detection every 3 seconds
     model_confidence: 0.5
     detection_classes: [
       "person",
