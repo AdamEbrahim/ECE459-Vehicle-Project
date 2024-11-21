@@ -16,7 +16,7 @@ class DummyCVModel(Node):
         self.declare_parameter('model_confidence', 0.5)
         self.declare_parameter('detection_classes', ['person', 'stop sign', 'yield sign', 'traffic light', 
                                                    'speed limit 30', 'speed limit 50', 'speed limit 70', 'school zone'])
-        self.declare_parameter('frame_rate', 30.0)
+        self.declare_parameter('frame_rate', 0.5)
         
         # Create a dictionary for detection probabilities
         default_probs = {

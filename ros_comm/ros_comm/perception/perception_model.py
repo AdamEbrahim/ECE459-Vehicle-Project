@@ -12,7 +12,7 @@ class PerceptionModel(Node):
         self.declare_parameter('detection_threshold', 0.7)
         self.declare_parameter('min_detection_size', 50)
         self.declare_parameter('max_detection_distance', 3.0)
-        self.declare_parameter('processing_rate', 20.0)
+        self.declare_parameter('processing_rate', 2.0)
         
         # Get parameter values
         self.detection_threshold = self.get_parameter('detection_threshold').value

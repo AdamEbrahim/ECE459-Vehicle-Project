@@ -13,14 +13,14 @@ perception:
     detection_threshold: 0.7
     min_detection_size: 50  # pixels
     max_detection_distance: 3.0  # meters
-    processing_rate: 20.0  # Hz
+    processing_rate: 2.0  # Hz
 
 # Computer Vision Parameters
 computer_vision:
   ros__parameters:
     camera_width: 1280
     camera_height: 720
-    frame_rate: 30
+    frame_rate: 0.5
     model_confidence: 0.5
     detection_classes: [
       "person",
