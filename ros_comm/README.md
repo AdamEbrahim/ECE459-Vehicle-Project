@@ -191,3 +191,49 @@ To modify these parameters:
    - Monitor user_commands topic
    - Ensure `user_control` node is running on Jetson
    - Verify WiFi connection between laptop and Jetson
+
+
+## Next Steps and Improvements
+
+### 1. ESP Configuration
+1. **Serial Communication Setup**
+   - Configure ESP32 serial port (default: `/dev/ttyUSB0`)
+   - Verify baud rate matches ESP firmware (default: 115200)
+   - Test connection: `python -m serial.tools.miniterm /dev/ttyUSB0 115200`
+
+2. **Command Protocol**
+   - Ensure ESP firmware matches expected command format
+   - Test basic commands manually through serial monitor
+   - Verify motor response to each command type
+
+### 2. Control System Tuning
+1. **Speed Calibration**
+   - Fine-tune speed levels in `robot_params.yaml`:
+     - Adjust `default_speed` for normal operation
+     - Set appropriate `slow_speed` for careful maneuvers
+     - Calibrate `turn_speed` for smooth turns
+
+2. **Safety Improvements**
+   - Implement continuous command sending (current proposal):
+     - Default to STOP when no keys are pressed
+     - Send commands at fixed rate (e.g., 20Hz)
+     - Only move while keys are actively held down
+   - Add emergency stop functionality
+   - Implement gradual speed changes
+
+3. **Response Tuning**
+   - Adjust command rates for smoother control
+   - Fine-tune detection distances and speeds
+   - Calibrate turn angles and speeds
+
+### 3. Future Enhancements
+1. **Computer Vision**
+   - Implement actual object/sign detection
+   - Add distance estimation
+   - Improve detection reliability
+
+
+2. **User Interface (if time)**
+   - Develop web-based control interface
+   - Add real-time camera feed
+   - Implement status monitoring dashboard / logs over network
