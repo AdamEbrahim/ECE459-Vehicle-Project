@@ -7,13 +7,20 @@ package_name = 'ros_comm'
 setup(
     name=package_name,
     version='0.0.1',
-    packages=find_packages(),
+    packages=[package_name],
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),
-        (os.path.join('share', package_name, 'config'), glob('config/*.yaml'))
+        (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
+        (os.path.join('lib', package_name), [
+            'ros_comm/computer_vision/dummy_cv_model.py',
+            'ros_comm/perception/perception_model.py',
+            'ros_comm/control/robot_controller.py',
+            'ros_comm/esp/esp_forwarder2.py',
+            'ros_comm/control/user_control.py'
+        ])
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -30,14 +37,5 @@ setup(
             'esp_forwarder = ros_comm.esp.esp_forwarder2:main',
             'user_control = ros_comm.control.user_control:main',
         ],
-    },
-    package_dir={'': '.'},
-    scripts=[],
-    py_modules=[
-        'ros_comm.computer_vision.dummy_cv_model',
-        'ros_comm.perception.perception_model',
-        'ros_comm.control.robot_controller',
-        'ros_comm.esp.esp_forwarder2',
-        'ros_comm.control.user_control'
-    ]
+    }
 )
