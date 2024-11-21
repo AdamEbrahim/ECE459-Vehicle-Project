@@ -14,7 +14,7 @@ def generate_launch_description():
         # Computer Vision Node
         Node(
             package='ros_comm',
-            executable='src/computer_vision/dummy_cv_model.py',
+            executable='cv_model',
             name='cv_model',
             output='screen',
             parameters=[config_file]
@@ -23,7 +23,7 @@ def generate_launch_description():
         # Perception Node
         Node(
             package='ros_comm',
-            executable='src/perception/perception_model.py',
+            executable='perception',
             name='perception',
             output='screen',
             parameters=[config_file]
@@ -32,7 +32,7 @@ def generate_launch_description():
         # Robot Controller
         Node(
             package='ros_comm',
-            executable='src/control/robot_controller.py',
+            executable='robot_controller',
             name='robot_controller',
             output='screen',
             parameters=[config_file]
@@ -41,8 +41,17 @@ def generate_launch_description():
         # Motor Controller (ESP Forwarder)
         Node(
             package='ros_comm',
-            executable='src/esp/esp_forwarder2.py',
+            executable='esp_forwarder',
             name='motor_controller',
+            output='screen',
+            parameters=[config_file]
+        ),
+
+        # User Control (on Jetson)
+        Node(
+            package='ros_comm',
+            executable='user_control',
+            name='user_control',
             output='screen',
             parameters=[config_file]
         )
