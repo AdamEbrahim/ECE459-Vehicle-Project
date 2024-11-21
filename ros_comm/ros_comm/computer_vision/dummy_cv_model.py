@@ -6,47 +6,36 @@ import random
 import json
 
 class DummyCVModel(Node):
-    """
-    Dummy Computer Vision model that simulates object detection
-    Used for testing the perception and control system
-    """
+    """Dummy Computer Vision model that simulates object detection
+    Used for testing the perception and control system"""
     
     def __init__(self):
         super().__init__('computer_vision')
         
-        # Declare parameters
-        self.declare_parameters(
-            namespace='',
-            parameters=[
-                ('model_confidence', 0.5),
-                ('detection_classes', [
-                    'person',
-                    'stop sign',
-                    'yield sign',
-                    'traffic light',
-                    'speed limit 30',
-                    'speed limit 50',
-                    'speed limit 70',
-                    'school zone'
-                ]),
-                ('detection_probabilities', {
-                    'person': 0.3,
-                    'stop sign': 0.4,
-                    'yield sign': 0.4,
-                    'traffic light': 0.4,
-                    'speed limit 30': 0.3,
-                    'speed limit 50': 0.3,
-                    'speed limit 70': 0.3,
-                    'school zone': 0.3
-                }),
-                ('frame_rate', 30.0)
-            ]
-        )
+        # Declare parameters individually to ensure correct typing
+        self.declare_parameter('model_confidence', 0.5)
+        self.declare_parameter('detection_classes', ['person', 'stop sign', 'yield sign', 'traffic light', 
+                                                   'speed limit 30', 'speed limit 50', 'speed limit 70', 'school zone'])
+        self.declare_parameter('frame_rate', 30.0)
+        
+        # Create a dictionary for detection probabilities
+        default_probs = {
+            'person': 0.3,
+            'stop sign': 0.4,
+            'yield sign': 0.4,
+            'traffic light': 0.4,
+            'speed limit 30': 0.3,
+            'speed limit 50': 0.3,
+            'speed limit 70': 0.3,
+            'school zone': 0.3
+        }
+        # Convert dict to string for parameter storage
+        self.declare_parameter('detection_probabilities', json.dumps(default_probs))
         
         # Get parameters
         self.model_confidence = self.get_parameter('model_confidence').value
         self.detection_classes = self.get_parameter('detection_classes').value
-        self.detection_probs = self.get_parameter('detection_probabilities').value
+        self.detection_probs = json.loads(self.get_parameter('detection_probabilities').value)
         frame_rate = self.get_parameter('frame_rate').value
         
         # Create detection publisher
@@ -69,26 +58,18 @@ class DummyCVModel(Node):
         """
         detections = []
         
-        # Simulate detection for each class
+        # For each class, randomly decide if it's detected
         for obj_class in self.detection_classes:
-            if random.random() < self.detection_probs.get(obj_class, 0.3):
+            if random.random() < self.detection_probs[obj_class]:
                 detection = {
                     'class': obj_class,
-                    'confidence': round(random.uniform(self.model_confidence, 1.0), 2),
-                    'bbox': self._generate_bbox(),
+                    'confidence': round(random.uniform(self.model_confidence, 1.0), 3),
+                    'bbox': self._generate_bbox()
                 }
-                
-                # Add specific details for certain classes
-                if 'speed limit' in obj_class:
-                    speed = int(obj_class.split()[-1])
-                    detection['speed_value'] = speed
-                elif obj_class == 'traffic light':
-                    detection['color'] = random.choice(['red', 'yellow', 'green'])
-                
                 detections.append(detection)
         
+        # Create message
         if detections:
-            # Publish detections as JSON string
             msg = String()
             msg.data = json.dumps(detections)
             self.detection_pub.publish(msg)
@@ -96,23 +77,18 @@ class DummyCVModel(Node):
     
     def _generate_bbox(self):
         """Generate a random bounding box"""
-        x = random.randint(0, 1280)
-        y = random.randint(0, 720)
-        w = random.randint(50, 200)
-        h = random.randint(50, 200)
+        x = random.uniform(0, 1)
+        y = random.uniform(0, 1)
+        w = random.uniform(0.1, 0.3)
+        h = random.uniform(0.1, 0.3)
         return [x, y, w, h]
 
 def main(args=None):
     rclpy.init(args=args)
     cv_model = DummyCVModel()
-    
-    try:
-        rclpy.spin(cv_model)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        cv_model.destroy_node()
-        rclpy.shutdown()
+    rclpy.spin(cv_model)
+    cv_model.destroy_node()
+    rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
