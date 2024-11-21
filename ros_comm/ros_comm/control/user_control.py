@@ -42,7 +42,8 @@ class UserControl(Node):
                         break
 
                     self.last_received_time = time.time()
-                    command = data.decode().lower()
+                    command = data.decode().strip().lower()
+                    self.get_logger().info(f'Received command: {command}')
 
                     # Map commands to robot controller format
                     if command == 'w':
@@ -63,7 +64,7 @@ class UserControl(Node):
                         message = String()
                         message.data = msg
                         self.publisher_.publish(message)
-                        self.get_logger().debug(f'Published: {msg}')
+                        self.get_logger().info(f'Published: {msg}')
 
                 except Exception as e:
                     self.get_logger().error(f'Error handling connection: {e}')
@@ -94,4 +95,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-

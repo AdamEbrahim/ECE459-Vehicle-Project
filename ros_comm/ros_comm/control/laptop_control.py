@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import socket
 from pynput import keyboard
 import time
@@ -31,8 +32,9 @@ def start_client():
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
     server_ip = '10.194.159.230'  
-    server_port = 12000  
+    server_port = 12000
 
+    print(f"Connecting to {server_ip}:{server_port}...")
     client_socket.connect((server_ip, server_port))
     print("Connected to the server.")
     
