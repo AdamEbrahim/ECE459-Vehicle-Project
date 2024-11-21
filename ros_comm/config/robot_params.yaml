@@ -32,16 +32,6 @@ computer_vision:
       "speed limit 70",
       "school zone"
     ]
-    # Simulated detection probabilities (for dummy model)
-    detection_probabilities:
-      person: 0.3
-      stop sign: 0.4
-      yield sign: 0.4
-      traffic light: 0.4
-      speed limit 30: 0.3
-      speed limit 50: 0.3
-      speed limit 70: 0.3
-      school zone: 0.3
 
 # ESP Motor Control Parameters
 motor_controller:
@@ -49,10 +39,20 @@ motor_controller:
     # Hardware settings
     i2c_address: 0x48
     i2c_bus: 1
-    command_rate: 50.0  # Hz
+    command_rate: 50.0  # Hz - How often to send commands
     
-    # Runtime settings
+    # Speed levels for different operations
     speed_levels:
-      slow: 25      # Maps to SPEED_SLOW (0x10)
-      normal: 50    # Maps to SPEED_NORMAL (0x20)
-      fast: 75      # Maps to SPEED_CUSTOM with value
+      slow: 25    # For careful maneuvering
+      normal: 50  # Default operation speed
+      fast: 75    # Maximum allowed speed, also used to scale custom speed
+      
+    # Motor calibration (0-100%)
+    motor_calibration:
+      left_trim: 0    # Trim if left motor is stronger/weaker
+      right_trim: 0   # Trim if right motor is stronger/weaker
+      
+    # Safety limits
+    safety:
+      max_acceleration: 20  # Maximum speed change per second
+      emergency_stop_time: 0.5  # Seconds to full stop

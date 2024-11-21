@@ -73,10 +73,20 @@ class RobotController(Node):
             cmd = f"{self.last_command}_{self.slow_speed}"
             self.command_publisher.publish(String(data=cmd))
         elif self.current_state == RobotState.SPEED_LIMITED:
-            cmd = f"{self.last_command}_{self.current_speed_limit}"
+            # For turns, use a scaled-down speed for safety
+            if self.last_command in ['LEFT', 'RIGHT']:
+                # Scale turn speed: never exceed turn_speed, and scale down proportionally
+                scaled_speed = min(self.turn_speed, int(self.current_speed_limit * 0.7))
+                cmd = f"{self.last_command}_{scaled_speed}"
+            else:
+                cmd = f"{self.last_command}_{self.current_speed_limit}"
             self.command_publisher.publish(String(data=cmd))
+            self.get_logger().debug(f'Speed limited command: {cmd}')
         else:  # NORMAL
-            cmd = f"{self.last_command}_{self.default_speed}"
+            if self.last_command in ['LEFT', 'RIGHT']:
+                cmd = f"{self.last_command}_{self.turn_speed}"
+            else:
+                cmd = f"{self.last_command}_{self.default_speed}"
             self.command_publisher.publish(String(data=cmd))
     
     def handle_user_command(self, msg):
@@ -113,7 +123,7 @@ class RobotController(Node):
             speed_match = re.match(r'SPEED_(\d+)', command)
             if speed_match:
                 speed = int(speed_match.group(1))
-                self.current_speed_limit = min(speed, self.default_speed)
+                self.current_speed_limit = speed  # Remove the min() to allow higher speeds
                 self.current_state = RobotState.SPEED_LIMITED
                 self.get_logger().info(f'Speed limit set to {self.current_speed_limit}')
 
