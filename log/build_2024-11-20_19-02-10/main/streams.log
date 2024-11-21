@@ -1,0 +1,7 @@
+[0.045s] Invoking command in '/home/ece459/ECE459-Vehicle-Project/build/main': /usr/bin/cmake /home/ece459/ECE459-Vehicle-Project/esp_control -DCMAKE_INSTALL_PREFIX=/home/ece459/ECE459-Vehicle-Project/install/main
+[0.173s] CMake Error at CMakeLists.txt:5 (cmake_minimum_required):
+[0.174s]   CMake 3.16 or higher is required.  You are running version 3.10.2
+[0.175s] 
+[0.175s] 
+[0.176s] -- Configuring incomplete, errors occurred!
+[0.179s] Invoked command in '/home/ece459/ECE459-Vehicle-Project/build/main' returned '1': /usr/bin/cmake /home/ece459/ECE459-Vehicle-Project/esp_control -DCMAKE_INSTALL_PREFIX=/home/ece459/ECE459-Vehicle-Project/install/main

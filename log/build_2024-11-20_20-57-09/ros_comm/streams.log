@@ -1,0 +1,11 @@
+[3.866s] Invoking command in '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/ros_comm': PYTHONPATH=/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/build/ros_comm/prefix_override:/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install/ros_comm/lib/python3.6/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/ros_comm build --build-base /home/ece459/ros2_ws/src/ECE459-Vehicle-Project/build/ros_comm/build install --record /home/ece459/ros2_ws/src/ECE459-Vehicle-Project/build/ros_comm/install.log --single-version-externally-managed
+[5.302s] running egg_info
+[5.304s] creating ../build/ros_comm/ros_comm.egg-info
+[5.305s] writing ../build/ros_comm/ros_comm.egg-info/PKG-INFO
+[5.305s] writing dependency_links to ../build/ros_comm/ros_comm.egg-info/dependency_links.txt
+[5.306s] writing entry points to ../build/ros_comm/ros_comm.egg-info/entry_points.txt
+[5.307s] writing requirements to ../build/ros_comm/ros_comm.egg-info/requires.txt
+[5.307s] writing top-level names to ../build/ros_comm/ros_comm.egg-info/top_level.txt
+[5.308s] writing manifest file '../build/ros_comm/ros_comm.egg-info/SOURCES.txt'
+[5.313s] error: package directory 'ros_comm' does not exist
+[5.406s] Invoked command in '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/ros_comm' returned '1': PYTHONPATH=/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/build/ros_comm/prefix_override:/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install/ros_comm/lib/python3.6/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/ros_comm build --build-base /home/ece459/ros2_ws/src/ECE459-Vehicle-Project/build/ros_comm/build install --record /home/ece459/ros2_ws/src/ECE459-Vehicle-Project/build/ros_comm/install.log --single-version-externally-managed

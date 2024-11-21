@@ -1,0 +1,147 @@
+[1.518s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build', '--packages-select', 'ros_comm']
+[1.519s] DEBUG:colcon:Parsed command line arguments: Namespace(allow_overriding=[], base_paths=['.'], build_base='build', continue_on_error=False, event_handlers=None, executor='parallel', ignore_user_meta=False, install_base='install', log_base=None, log_level=None, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x7fa6581b38>>, merge_install=False, metas=['./colcon.meta'], packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_end=None, packages_ignore=None, packages_ignore_regex=None, packages_select=['ros_comm'], packages_select_build_failed=False, packages_select_by_dep=None, packages_select_regex=None, packages_select_test_failures=False, packages_skip=None, packages_skip_build_finished=False, packages_skip_by_dep=None, packages_skip_regex=None, packages_skip_test_passed=False, packages_skip_up_to=None, packages_start=None, packages_up_to=None, packages_up_to_regex=None, parallel_workers=4, paths=None, symlink_install=False, test_result_base=None, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x7fa6581b38>, verb_name='build', verb_parser=<colcon_defaults.argument_parser.defaults.DefaultArgumentsDecorator object at 0x7fa63d0160>)
+[1.650s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[1.651s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[1.651s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[1.651s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[1.651s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[1.653s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[1.653s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project'
+[1.654s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore']
+[1.654s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[1.654s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[1.655s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[1.655s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[1.655s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[1.655s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python']
+[1.655s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[1.656s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[1.656s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[1.656s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore']
+[1.657s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[1.657s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[1.658s] Level 1:colcon.colcon_core.package_identification:_identify(cv_model) by extensions ['ignore']
+[1.659s] Level 1:colcon.colcon_core.package_identification:_identify(cv_model) by extension 'ignore'
+[1.659s] Level 1:colcon.colcon_core.package_identification:_identify(cv_model) by extensions ['colcon_pkg']
+[1.659s] Level 1:colcon.colcon_core.package_identification:_identify(cv_model) by extension 'colcon_pkg'
+[1.660s] Level 1:colcon.colcon_core.package_identification:_identify(cv_model) by extensions ['colcon_meta']
+[1.660s] Level 1:colcon.colcon_core.package_identification:_identify(cv_model) by extension 'colcon_meta'
+[1.660s] Level 1:colcon.colcon_core.package_identification:_identify(cv_model) by extensions ['python']
+[1.660s] Level 1:colcon.colcon_core.package_identification:_identify(cv_model) by extension 'python'
+[1.660s] Level 1:colcon.colcon_core.package_identification:_identify(cv_model) by extensions ['python_setup_py']
+[1.661s] Level 1:colcon.colcon_core.package_identification:_identify(cv_model) by extension 'python_setup_py'
+[1.661s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control) by extensions ['ignore']
+[1.662s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control) by extension 'ignore'
+[1.662s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control) by extensions ['colcon_pkg']
+[1.662s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control) by extension 'colcon_pkg'
+[1.662s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control) by extensions ['colcon_meta']
+[1.662s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control) by extension 'colcon_meta'
+[1.663s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control) by extensions ['python']
+[1.663s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control) by extension 'python'
+[1.663s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control) by extensions ['python_setup_py']
+[1.663s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control) by extension 'python_setup_py'
+[1.664s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/main) by extensions ['ignore']
+[1.664s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/main) by extension 'ignore'
+[1.664s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/main) by extensions ['colcon_pkg']
+[1.665s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/main) by extension 'colcon_pkg'
+[1.665s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/main) by extensions ['colcon_meta']
+[1.665s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/main) by extension 'colcon_meta'
+[1.665s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/main) by extensions ['python']
+[1.665s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/main) by extension 'python'
+[1.666s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/main) by extensions ['python_setup_py']
+[1.666s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/main) by extension 'python_setup_py'
+[1.666s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components) by extensions ['ignore']
+[1.667s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components) by extension 'ignore'
+[1.667s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components) by extensions ['colcon_pkg']
+[1.667s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components) by extension 'colcon_pkg'
+[1.667s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components) by extensions ['colcon_meta']
+[1.668s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components) by extension 'colcon_meta'
+[1.668s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components) by extensions ['python']
+[1.668s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components) by extension 'python'
+[1.668s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components) by extensions ['python_setup_py']
+[1.668s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components) by extension 'python_setup_py'
+[1.669s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050) by extensions ['ignore']
+[1.669s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050) by extension 'ignore'
+[1.670s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050) by extensions ['colcon_pkg']
+[1.670s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050) by extension 'colcon_pkg'
+[1.670s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050) by extensions ['colcon_meta']
+[1.670s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050) by extension 'colcon_meta'
+[1.671s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050) by extensions ['python']
+[1.671s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050) by extension 'python'
+[1.671s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050) by extensions ['python_setup_py']
+[1.671s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050) by extension 'python_setup_py'
+[1.672s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/include) by extensions ['ignore']
+[1.672s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/include) by extension 'ignore'
+[1.672s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/include) by extensions ['colcon_pkg']
+[1.676s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/include) by extension 'colcon_pkg'
+[1.680s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/include) by extensions ['colcon_meta']
+[1.681s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/include) by extension 'colcon_meta'
+[1.681s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/include) by extensions ['python']
+[1.682s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/include) by extension 'python'
+[1.682s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/include) by extensions ['python_setup_py']
+[1.682s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/include) by extension 'python_setup_py'
+[1.683s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/test) by extensions ['ignore']
+[1.683s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/test) by extension 'ignore'
+[1.683s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/test) by extensions ['colcon_pkg']
+[1.684s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/test) by extension 'colcon_pkg'
+[1.684s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/test) by extensions ['colcon_meta']
+[1.684s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/test) by extension 'colcon_meta'
+[1.684s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/test) by extensions ['python']
+[1.684s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/test) by extension 'python'
+[1.685s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/test) by extensions ['python_setup_py']
+[1.685s] Level 1:colcon.colcon_core.package_identification:_identify(esp_control/managed_components/espressif__mpu6050/test) by extension 'python_setup_py'
+[1.685s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore']
+[1.686s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[1.686s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[1.687s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore']
+[1.687s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[1.687s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[1.688s] Level 1:colcon.colcon_core.package_identification:_identify(ros_comm) by extensions ['ignore']
+[1.688s] Level 1:colcon.colcon_core.package_identification:_identify(ros_comm) by extension 'ignore'
+[1.688s] Level 1:colcon.colcon_core.package_identification:_identify(ros_comm) by extensions ['colcon_pkg']
+[1.689s] Level 1:colcon.colcon_core.package_identification:_identify(ros_comm) by extension 'colcon_pkg'
+[1.689s] Level 1:colcon.colcon_core.package_identification:_identify(ros_comm) by extensions ['colcon_meta']
+[1.689s] Level 1:colcon.colcon_core.package_identification:_identify(ros_comm) by extension 'colcon_meta'
+[1.689s] Level 1:colcon.colcon_core.package_identification:_identify(ros_comm) by extensions ['python']
+[1.689s] Level 1:colcon.colcon_core.package_identification:_identify(ros_comm) by extension 'python'
+[1.690s] Level 1:colcon.colcon_core.package_identification:_identify(ros_comm) by extensions ['python_setup_py']
+[1.690s] Level 1:colcon.colcon_core.package_identification:_identify(ros_comm) by extension 'python_setup_py'
+[3.218s] DEBUG:colcon.colcon_core.package_identification:Package 'ros_comm' with type 'python' and name 'ros_comm'
+[3.219s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[3.219s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[3.219s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[3.220s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[3.220s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[3.322s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[3.322s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[3.329s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 0 installed packages in /home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install
+[3.332s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 0 installed packages in /home/ece459/ros2_ws/install
+[3.332s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[3.337s] DEBUG:colcon.colcon_core.verb:Building package 'ros_comm' with the following arguments: {'build_base': '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/build/ros_comm', 'install_base': '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install/ros_comm', 'merge_install': False, 'path': '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/ros_comm', 'symlink_install': False, 'test_result_base': None}
+[3.339s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[3.345s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[3.346s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/ros_comm'
+[3.361s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[3.362s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[3.363s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[7.227s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/ros_comm': PYTHONPATH=/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/build/ros_comm/prefix_override:/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install/ros_comm/lib/python3.6/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/ros_comm build --build-base /home/ece459/ros2_ws/src/ECE459-Vehicle-Project/build/ros_comm/build install --record /home/ece459/ros2_ws/src/ECE459-Vehicle-Project/build/ros_comm/install.log --single-version-externally-managed
+[8.774s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/ros_comm' returned '1': PYTHONPATH=/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/build/ros_comm/prefix_override:/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install/ros_comm/lib/python3.6/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/ros_comm build --build-base /home/ece459/ros2_ws/src/ECE459-Vehicle-Project/build/ros_comm/build install --record /home/ece459/ros2_ws/src/ECE459-Vehicle-Project/build/ros_comm/install.log --single-version-externally-managed
+[8.783s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[8.784s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[8.784s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '1'
+[8.785s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[8.814s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[8.815s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[8.815s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[8.849s] DEBUG:colcon.colcon_notification.desktop_notification.notify2:Failed to initialize notify2: org.freedesktop.DBus.Error.Spawn.ChildExited: Process org.freedesktop.Notifications exited with status 1
+[8.849s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[8.851s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install/local_setup.ps1'
+[8.857s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install/_local_setup_util_ps1.py'
+[8.866s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install/setup.ps1'
+[8.872s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install/local_setup.sh'
+[8.874s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install/_local_setup_util_sh.py'
+[8.876s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install/setup.sh'
+[8.882s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install/local_setup.bash'
+[8.884s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install/setup.bash'
+[8.889s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install/local_setup.zsh'
+[8.892s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install/setup.zsh'

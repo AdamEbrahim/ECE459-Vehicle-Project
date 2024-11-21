@@ -1,0 +1,2 @@
+Invoking command in '/home/ece459/ECE459-Vehicle-Project/build/main': /usr/bin/cmake /home/ece459/ECE459-Vehicle-Project/esp_control -DCMAKE_INSTALL_PREFIX=/home/ece459/ECE459-Vehicle-Project/install/main
+Invoked command in '/home/ece459/ECE459-Vehicle-Project/build/main' returned '1': /usr/bin/cmake /home/ece459/ECE459-Vehicle-Project/esp_control -DCMAKE_INSTALL_PREFIX=/home/ece459/ECE459-Vehicle-Project/install/main

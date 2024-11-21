@@ -1,0 +1,14 @@
+[0.000000] (-) TimerEvent: {}
+[0.000496] (main) JobQueued: {'identifier': 'main', 'dependencies': OrderedDict()}
+[0.000689] (main) JobStarted: {'identifier': 'main'}
+[0.042357] (main) JobProgress: {'identifier': 'main', 'progress': 'cmake'}
+[0.043454] (main) Command: {'cmd': ['/usr/bin/cmake', '/home/ece459/ECE459-Vehicle-Project/esp_control', '-DCMAKE_INSTALL_PREFIX=/home/ece459/ECE459-Vehicle-Project/install/main'], 'cwd': '/home/ece459/ECE459-Vehicle-Project/build/main', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('MAIL', '/var/mail/ece459'), ('USER', 'ece459'), ('LD_LIBRARY_PATH', '/opt/ros/dashing/opt/yaml_cpp_vendor/lib:/opt/ros/dashing/opt/rviz_ogre_vendor/lib:/opt/ros/dashing/lib:/usr/local/local/cuda/lib64'), ('SHLVL', '1'), ('HOME', '/home/ece459'), ('OLDPWD', '/home/ece459/ECE459-Vehicle-Project/ros_comm'), ('HUSHLOGIN', 'FALSE'), ('ROS_PYTHON_VERSION', '3'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('ROS_DISTRO', 'dashing'), ('LOGNAME', 'ece459'), ('JOURNAL_STREAM', '8:28365'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_ID', '2'), ('TERM', 'vt220'), ('PATH', '/home/ece459/.local/bin:/opt/ros/dashing/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'), ('INVOCATION_ID', '90464873415c497db024388913bb77d3'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('LANG', 'en_US.UTF-8'), ('LS_COLORS', ''), ('AMENT_PREFIX_PATH', '/opt/ros/dashing'), ('SHELL', '/bin/bash'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('PWD', '/home/ece459/ECE459-Vehicle-Project/build/main'), ('XDG_DATA_DIRS', '/usr/local/share:/usr/share:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/dashing/lib/python3.6/site-packages'), ('COLCON', '1')]), 'shell': False}
+[0.095524] (-) TimerEvent: {}
+[0.173537] (main) StderrLine: {'line': b'CMake Error at CMakeLists.txt:5 (cmake_minimum_required):\n'}
+[0.174733] (main) StderrLine: {'line': b'  CMake 3.16 or higher is required.  You are running version 3.10.2\n'}
+[0.175629] (main) StderrLine: {'line': b'\n'}
+[0.176306] (main) StderrLine: {'line': b'\n'}
+[0.176807] (main) StdoutLine: {'line': b'-- Configuring incomplete, errors occurred!\n'}
+[0.179700] (main) CommandEnded: {'returncode': 1}
+[0.182222] (main) JobEnded: {'identifier': 'main', 'rc': 1}
+[0.196336] (-) EventReactorShutdown: {}

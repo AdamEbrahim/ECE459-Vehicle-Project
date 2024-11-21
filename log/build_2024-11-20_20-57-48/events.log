@@ -1,0 +1,68 @@
+[0.000000] (-) TimerEvent: {}
+[0.000750] (ros_comm) JobQueued: {'identifier': 'ros_comm', 'dependencies': OrderedDict()}
+[0.002344] (ros_comm) JobStarted: {'identifier': 'ros_comm'}
+[0.098690] (-) TimerEvent: {}
+[0.199588] (-) TimerEvent: {}
+[0.300301] (-) TimerEvent: {}
+[0.401111] (-) TimerEvent: {}
+[0.501834] (-) TimerEvent: {}
+[0.602554] (-) TimerEvent: {}
+[0.703266] (-) TimerEvent: {}
+[0.803984] (-) TimerEvent: {}
+[0.904760] (-) TimerEvent: {}
+[1.005431] (-) TimerEvent: {}
+[1.106093] (-) TimerEvent: {}
+[1.206788] (-) TimerEvent: {}
+[1.307505] (-) TimerEvent: {}
+[1.408207] (-) TimerEvent: {}
+[1.509214] (-) TimerEvent: {}
+[1.610097] (-) TimerEvent: {}
+[1.711049] (-) TimerEvent: {}
+[1.811809] (-) TimerEvent: {}
+[1.912573] (-) TimerEvent: {}
+[2.013239] (-) TimerEvent: {}
+[2.113970] (-) TimerEvent: {}
+[2.214682] (-) TimerEvent: {}
+[2.315389] (-) TimerEvent: {}
+[2.416040] (-) TimerEvent: {}
+[2.516830] (-) TimerEvent: {}
+[2.617484] (-) TimerEvent: {}
+[2.718165] (-) TimerEvent: {}
+[2.818868] (-) TimerEvent: {}
+[2.919585] (-) TimerEvent: {}
+[3.020296] (-) TimerEvent: {}
+[3.121036] (-) TimerEvent: {}
+[3.221752] (-) TimerEvent: {}
+[3.322441] (-) TimerEvent: {}
+[3.423173] (-) TimerEvent: {}
+[3.524011] (-) TimerEvent: {}
+[3.624859] (-) TimerEvent: {}
+[3.725517] (-) TimerEvent: {}
+[3.826278] (-) TimerEvent: {}
+[3.880018] (ros_comm) Command: {'cmd': ['/usr/bin/python3', 'setup.py', 'egg_info', '--egg-base', '../build/ros_comm', 'build', '--build-base', '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/build/ros_comm/build', 'install', '--record', '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/build/ros_comm/install.log', '--single-version-externally-managed'], 'cwd': '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/ros_comm', 'env': {'LESSOPEN': '| /usr/bin/lesspipe %s', 'MAIL': '/var/mail/ece459', 'USER': 'ece459', 'LD_LIBRARY_PATH': '/opt/ros/dashing/opt/yaml_cpp_vendor/lib:/opt/ros/dashing/opt/rviz_ogre_vendor/lib:/opt/ros/dashing/lib:/usr/local/local/cuda/lib64', 'SHLVL': '1', 'OLDPWD': '/home/ece459/ros2_ws/src', 'HOME': '/home/ece459', 'HUSHLOGIN': 'FALSE', 'ROS_PYTHON_VERSION': '3', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLCON_PREFIX_PATH': '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install:/home/ece459/ros2_ws/install', 'ROS_DISTRO': 'dashing', 'LOGNAME': 'ece459', 'JOURNAL_STREAM': '8:28365', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_ID': '2', 'TERM': 'vt220', 'PATH': '/home/ece459/.local/bin:/opt/ros/dashing/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin', 'INVOCATION_ID': '90464873415c497db024388913bb77d3', 'XDG_RUNTIME_DIR': '/run/user/1000', 'LANG': 'en_US.UTF-8', 'LS_COLORS': '', 'AMENT_PREFIX_PATH': '/opt/ros/dashing', 'SHELL': '/bin/bash', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'PWD': '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/build/ros_comm', 'XDG_DATA_DIRS': '/usr/local/share:/usr/share:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/build/ros_comm/prefix_override:/home/ece459/ros2_ws/src/ECE459-Vehicle-Project/install/ros_comm/lib/python3.6/site-packages:/opt/ros/dashing/lib/python3.6/site-packages', 'COLCON': '1'}, 'shell': False}
+[3.926567] (-) TimerEvent: {}
+[4.027476] (-) TimerEvent: {}
+[4.128186] (-) TimerEvent: {}
+[4.228948] (-) TimerEvent: {}
+[4.329616] (-) TimerEvent: {}
+[4.430352] (-) TimerEvent: {}
+[4.531053] (-) TimerEvent: {}
+[4.631747] (-) TimerEvent: {}
+[4.732432] (-) TimerEvent: {}
+[4.833150] (-) TimerEvent: {}
+[4.933791] (-) TimerEvent: {}
+[5.034478] (-) TimerEvent: {}
+[5.135189] (-) TimerEvent: {}
+[5.235889] (-) TimerEvent: {}
+[5.324094] (ros_comm) StdoutLine: {'line': b'running egg_info\n'}
+[5.326866] (ros_comm) StdoutLine: {'line': b'writing ../build/ros_comm/ros_comm.egg-info/PKG-INFO\n'}
+[5.327771] (ros_comm) StdoutLine: {'line': b'writing dependency_links to ../build/ros_comm/ros_comm.egg-info/dependency_links.txt\n'}
+[5.328680] (ros_comm) StdoutLine: {'line': b'writing entry points to ../build/ros_comm/ros_comm.egg-info/entry_points.txt\n'}
+[5.329447] (ros_comm) StdoutLine: {'line': b'writing requirements to ../build/ros_comm/ros_comm.egg-info/requires.txt\n'}
+[5.329918] (ros_comm) StdoutLine: {'line': b'writing top-level names to ../build/ros_comm/ros_comm.egg-info/top_level.txt\n'}
+[5.335614] (ros_comm) StderrLine: {'line': b"error: package directory 'ros_comm' does not exist\n"}
+[5.336321] (-) TimerEvent: {}
+[5.429041] (ros_comm) CommandEnded: {'returncode': 1}
+[5.430717] (ros_comm) JobEnded: {'identifier': 'ros_comm', 'rc': 1}
+[5.436502] (-) TimerEvent: {}
+[5.441217] (-) EventReactorShutdown: {}

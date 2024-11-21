@@ -1,0 +1,7 @@
+[console_scripts]
+cv_model = ros_comm.computer_vision.dummy_cv_model:main
+esp_forwarder = ros_comm.esp.esp_forwarder2:main
+perception = ros_comm.perception.perception_model:main
+robot_controller = ros_comm.control.robot_controller:main
+user_control = ros_comm.control.user_control:main
+

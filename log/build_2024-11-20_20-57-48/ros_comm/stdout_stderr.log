@@ -1,0 +1,7 @@
+running egg_info
+writing ../build/ros_comm/ros_comm.egg-info/PKG-INFO
+writing dependency_links to ../build/ros_comm/ros_comm.egg-info/dependency_links.txt
+writing entry points to ../build/ros_comm/ros_comm.egg-info/entry_points.txt
+writing requirements to ../build/ros_comm/ros_comm.egg-info/requires.txt
+writing top-level names to ../build/ros_comm/ros_comm.egg-info/top_level.txt
+error: package directory 'ros_comm' does not exist
