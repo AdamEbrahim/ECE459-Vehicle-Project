@@ -23,7 +23,8 @@ setup(
     ],
     install_requires=[
         'setuptools',
-        'opencv-python'
+        'opencv-python',
+        'numpy'
     ],
     zip_safe=True,
     maintainer='ece459',
