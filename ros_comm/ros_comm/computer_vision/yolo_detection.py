@@ -6,9 +6,7 @@ import json
 import cv2
 import numpy as np
 from ultralytics import YOLO
-import jetson.utils
-import threading
-import time
+import os
 
 class YOLODetectionNode(Node):
     def __init__(self):
@@ -22,22 +20,34 @@ class YOLODetectionNode(Node):
         )
         
         # Parameters
-        self.declare_parameter('model_path', 'best.pt')
         self.declare_parameter('confidence_threshold', 0.5)
         self.declare_parameter('frame_rate', 30.0)  # Target FPS
         
         # Get parameters
-        self.model_path = self.get_parameter('model_path').value
         self.conf_threshold = self.get_parameter('confidence_threshold').value
         frame_rate = self.get_parameter('frame_rate').value
         
-        # Load YOLO model
-        self.model = YOLO(self.model_path)
+        # Get the path to the model file
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        model_path = os.path.join(current_dir, 'models', 'best.pt')
         
-        # Initialize camera using OpenCV (can be switched to GStreamer pipeline if needed)
-        self.cap = cv2.VideoCapture("/dev/video0")
+        if not os.path.exists(model_path):
+            self.get_logger().error(f'Model file not found at {model_path}')
+            raise FileNotFoundError(f'Model file not found at {model_path}')
+            
+        self.get_logger().info(f'Loading model from {model_path}')
+        
+        # Load YOLO model
+        self.model = YOLO(model_path)
+        
+        # Initialize camera using OpenCV
+        self.cap = cv2.VideoCapture(0)  # Use default camera
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        
+        if not self.cap.isOpened():
+            self.get_logger().error('Failed to open camera')
+            raise RuntimeError('Failed to open camera')
         
         # Create detection timer
         self.timer = self.create_timer(1.0 / frame_rate, self.detect_objects)
