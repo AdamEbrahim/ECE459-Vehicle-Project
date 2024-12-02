@@ -35,6 +35,7 @@ setup(
             'robot_controller = ros_comm.control.robot_controller:main',
             'esp_forwarder = ros_comm.esp.esp_forwarder2:main',
             'user_control = ros_comm.control.user_control:main',
+            'yolo_detection = ros_comm.computer_vision.yolo_detection:main',
         ],
     }
 )
