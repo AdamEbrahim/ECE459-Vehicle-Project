@@ -23,10 +23,7 @@ setup(
     ],
     install_requires=[
         'setuptools',
-        'opencv-python',
-        'numpy',
-        'torch',
-        'torchvision'
+        'opencv-python'
     ],
     zip_safe=True,
     maintainer='ece459',

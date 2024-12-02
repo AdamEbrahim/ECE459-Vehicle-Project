@@ -3,9 +3,8 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 import json
-import cv2
-import numpy as np
-import torch
+import jetson.inference
+import jetson.utils
 import os
 
 class YOLODetectionNode(Node):
@@ -29,7 +28,7 @@ class YOLODetectionNode(Node):
         
         # Get the path to the model file
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        model_path = os.path.join(current_dir, 'models', 'best.pt')
+        model_path = os.path.join(current_dir, 'models', 'best.engine')  # TensorRT engine file
         
         if not os.path.exists(model_path):
             self.get_logger().error(f'Model file not found at {model_path}')
@@ -37,122 +36,66 @@ class YOLODetectionNode(Node):
             
         self.get_logger().info(f'Loading model from {model_path}')
         
-        # Load YOLO model using torch
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model = torch.jit.load(model_path)
-        self.model.to(self.device)
-        self.model.eval()
+        # Initialize camera and display
+        self.camera = jetson.utils.gstCamera(640, 480, "/dev/video0")
+        self.display = jetson.utils.glDisplay()
         
-        # Class names for our traffic signs
-        self.class_names = ['stop', 'yield', 'signalAhead', 'pedestrianCrossing', 
-                           'speedLimit25', 'speedLimit35']
-        
-        # Initialize camera using OpenCV
-        self.cap = cv2.VideoCapture(0)  # Use default camera
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        
-        if not self.cap.isOpened():
-            self.get_logger().error('Failed to open camera')
-            raise RuntimeError('Failed to open camera')
+        # Load detection network
+        self.net = jetson.inference.detectNet(
+            model=model_path,
+            labels=os.path.join(current_dir, 'models', 'labels.txt'),
+            input_blob="input_0",
+            output_cvg="scores",
+            output_bbox="boxes",
+            threshold=self.conf_threshold
+        )
         
         # Create detection timer
         self.timer = self.create_timer(1.0 / frame_rate, self.detect_objects)
         
-        # Window name for display
-        self.window_name = 'YOLOv8 Detections'
-        cv2.namedWindow(self.window_name, cv2.WINDOW_AUTOSIZE)
-        
         self.get_logger().info('YOLO Detection Node initialized')
-    
-    def preprocess_image(self, frame):
-        """Preprocess image for the model"""
-        # Resize and normalize image
-        img = cv2.resize(frame, (640, 640))
-        img = img.transpose((2, 0, 1))  # HWC to CHW
-        img = np.ascontiguousarray(img)
-        img = torch.from_numpy(img).to(self.device)
-        img = img.float()  # uint8 to fp16/32
-        img /= 255.0  # 0 - 255 to 0.0 - 1.0
-        if img.ndimension() == 3:
-            img = img.unsqueeze(0)
-        return img
     
     def detect_objects(self):
         """Process frame and detect objects"""
-        ret, frame = self.cap.read()
-        if not ret:
-            self.get_logger().warn('Failed to grab frame')
-            return
-        
-        # Preprocess image
-        img = self.preprocess_image(frame)
+        # Capture frame
+        img, width, height = self.camera.CaptureRGBA(zeroCopy=1)
         
         # Run inference
-        with torch.no_grad():
-            pred = self.model(img)
+        detections = self.net.Detect(img, width, height)
         
         # Process detections
-        detections = []
-        annotated_frame = frame.copy()
-        
-        # Convert predictions to the format we need
-        for det in pred[0]:
-            if det[4] > self.conf_threshold:  # Confidence threshold
-                x1, y1, x2, y2 = det[0:4].cpu().numpy()
-                conf = det[4].cpu().numpy()
-                cls = int(det[5].cpu().numpy())
-                
-                # Scale coordinates to original image size
-                height, width = frame.shape[:2]
-                x1 = int(x1 * width / 640)
-                x2 = int(x2 * width / 640)
-                y1 = int(y1 * height / 640)
-                y2 = int(y2 * height / 640)
-                
-                class_name = self.class_names[cls]
-                
-                # Create detection dict
-                detection = {
-                    'class': class_name,
-                    'confidence': float(conf),
-                    'bbox': {
-                        'x1': int(x1),
-                        'y1': int(y1),
-                        'x2': int(x2),
-                        'y2': int(y2)
-                    }
+        detection_list = []
+        for detection in detections:
+            # Get detection info
+            class_name = self.net.GetClassDesc(detection.ClassID)
+            confidence = detection.Confidence
+            
+            # Create detection dict
+            detection_info = {
+                'class': class_name,
+                'confidence': round(float(confidence), 3),
+                'bbox': {
+                    'x1': round(float(detection.Left), 2),
+                    'y1': round(float(detection.Top), 2),
+                    'x2': round(float(detection.Right), 2),
+                    'y2': round(float(detection.Bottom), 2)
                 }
-                detections.append(detection)
-                
-                # Draw on frame
-                cv2.rectangle(annotated_frame, 
-                            (x1, y1), 
-                            (x2, y2), 
-                            (0, 255, 0), 2)
-                cv2.putText(annotated_frame, 
-                           f'{class_name} {conf:.2f}', 
-                           (x1, y1 - 10), 
-                           cv2.FONT_HERSHEY_SIMPLEX, 
-                           0.5, 
-                           (0, 255, 0), 
-                           2)
+            }
+            detection_list.append(detection_info)
         
         # Publish detections
-        if detections:
+        if detection_list:
             msg = String()
-            msg.data = json.dumps(detections)
+            msg.data = json.dumps(detection_list)
             self.detection_pub.publish(msg)
-            self.get_logger().debug(f'Published {len(detections)} detections')
+            self.get_logger().debug(f'Published {len(detection_list)} detections')
         
         # Display frame
-        cv2.imshow(self.window_name, annotated_frame)
-        cv2.waitKey(1)
+        self.display.RenderOnce(img, width, height)
+        self.display.SetTitle(f"Object Detection | Network {self.net.GetNetworkFPS():.0f} FPS")
     
     def destroy_node(self):
         """Cleanup when node is shut down"""
-        self.cap.release()
-        cv2.destroyAllWindows()
         super().destroy_node()
 
 def main(args=None):

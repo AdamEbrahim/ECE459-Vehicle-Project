@@ -1,0 +1,6 @@
+stop
+yield
+signalAhead
+pedestrianCrossing
+speedLimit25
+speedLimit35
