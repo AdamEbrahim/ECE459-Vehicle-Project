@@ -21,7 +21,11 @@ setup(
         # Include config files
         (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
     ],
-    install_requires=['setuptools'],
+    install_requires=[
+        'setuptools',
+        'ultralytics',
+        'opencv-python'
+    ],
     zip_safe=True,
     maintainer='ece459',
     maintainer_email='ece459@todo.todo',
