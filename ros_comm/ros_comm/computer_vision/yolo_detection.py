@@ -5,7 +5,7 @@ from std_msgs.msg import String
 import json
 import cv2
 import numpy as np
-from ultralytics import YOLO
+import torch
 import os
 
 class YOLODetectionNode(Node):
@@ -37,8 +37,15 @@ class YOLODetectionNode(Node):
             
         self.get_logger().info(f'Loading model from {model_path}')
         
-        # Load YOLO model
-        self.model = YOLO(model_path)
+        # Load YOLO model using torch
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.model = torch.jit.load(model_path)
+        self.model.to(self.device)
+        self.model.eval()
+        
+        # Class names for our traffic signs
+        self.class_names = ['stop', 'yield', 'signalAhead', 'pedestrianCrossing', 
+                           'speedLimit25', 'speedLimit35']
         
         # Initialize camera using OpenCV
         self.cap = cv2.VideoCapture(0)  # Use default camera
@@ -58,51 +65,78 @@ class YOLODetectionNode(Node):
         
         self.get_logger().info('YOLO Detection Node initialized')
     
+    def preprocess_image(self, frame):
+        """Preprocess image for the model"""
+        # Resize and normalize image
+        img = cv2.resize(frame, (640, 640))
+        img = img.transpose((2, 0, 1))  # HWC to CHW
+        img = np.ascontiguousarray(img)
+        img = torch.from_numpy(img).to(self.device)
+        img = img.float()  # uint8 to fp16/32
+        img /= 255.0  # 0 - 255 to 0.0 - 1.0
+        if img.ndimension() == 3:
+            img = img.unsqueeze(0)
+        return img
+    
     def detect_objects(self):
         """Process frame and detect objects"""
         ret, frame = self.cap.read()
         if not ret:
             self.get_logger().warn('Failed to grab frame')
             return
-            
+        
+        # Preprocess image
+        img = self.preprocess_image(frame)
+        
         # Run inference
-        results = self.model(frame, conf=self.conf_threshold, verbose=False)[0]
+        with torch.no_grad():
+            pred = self.model(img)
         
         # Process detections
         detections = []
         annotated_frame = frame.copy()
         
-        for r in results.boxes.data.tolist():
-            x1, y1, x2, y2, conf, cls = r
-            
-            # Get class name
-            class_name = self.model.names[int(cls)]
-            
-            # Create detection dict
-            detection = {
-                'class': class_name,
-                'confidence': round(float(conf), 3),
-                'bbox': {
-                    'x1': round(float(x1), 2),
-                    'y1': round(float(y1), 2),
-                    'x2': round(float(x2), 2),
-                    'y2': round(float(y2), 2)
+        # Convert predictions to the format we need
+        for det in pred[0]:
+            if det[4] > self.conf_threshold:  # Confidence threshold
+                x1, y1, x2, y2 = det[0:4].cpu().numpy()
+                conf = det[4].cpu().numpy()
+                cls = int(det[5].cpu().numpy())
+                
+                # Scale coordinates to original image size
+                height, width = frame.shape[:2]
+                x1 = int(x1 * width / 640)
+                x2 = int(x2 * width / 640)
+                y1 = int(y1 * height / 640)
+                y2 = int(y2 * height / 640)
+                
+                class_name = self.class_names[cls]
+                
+                # Create detection dict
+                detection = {
+                    'class': class_name,
+                    'confidence': float(conf),
+                    'bbox': {
+                        'x1': int(x1),
+                        'y1': int(y1),
+                        'x2': int(x2),
+                        'y2': int(y2)
+                    }
                 }
-            }
-            detections.append(detection)
-            
-            # Draw on frame
-            cv2.rectangle(annotated_frame, 
-                        (int(x1), int(y1)), 
-                        (int(x2), int(y2)), 
-                        (0, 255, 0), 2)
-            cv2.putText(annotated_frame, 
-                       f'{class_name} {conf:.2f}', 
-                       (int(x1), int(y1 - 10)), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 
-                       0.5, 
-                       (0, 255, 0), 
-                       2)
+                detections.append(detection)
+                
+                # Draw on frame
+                cv2.rectangle(annotated_frame, 
+                            (x1, y1), 
+                            (x2, y2), 
+                            (0, 255, 0), 2)
+                cv2.putText(annotated_frame, 
+                           f'{class_name} {conf:.2f}', 
+                           (x1, y1 - 10), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 
+                           0.5, 
+                           (0, 255, 0), 
+                           2)
         
         # Publish detections
         if detections:

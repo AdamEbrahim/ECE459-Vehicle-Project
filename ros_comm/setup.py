@@ -23,8 +23,10 @@ setup(
     ],
     install_requires=[
         'setuptools',
-        'ultralytics',
-        'opencv-python'
+        'opencv-python',
+        'numpy',
+        'torch',
+        'torchvision'
     ],
     zip_safe=True,
     maintainer='ece459',
