@@ -6,11 +6,20 @@ import json
 import cv2
 import numpy as np
 import os
+import sys
 
 class YOLODetectionNode(Node):
     def __init__(self):
         super().__init__('yolo_detection')
         
+        # Check OpenCV version and DNN availability
+        self.get_logger().info(f'OpenCV version: {cv2.__version__}')
+        
+        if not hasattr(cv2, 'dnn'):
+            self.get_logger().error('OpenCV DNN module not available. Please install OpenCV with deep learning support.')
+            self.get_logger().error('Run: pip3 install opencv-python-headless')
+            sys.exit(1)
+            
         # Create publisher
         self.detection_pub = self.create_publisher(
             String,
@@ -46,12 +55,25 @@ class YOLODetectionNode(Node):
             
         self.get_logger().info(f'Loaded {len(self.class_names)} classes')
         
-        # Load YOLO model using OpenCV DNN
-        self.net = cv2.dnn.readNetFromONNX(model_path)
-        
-        # Use CUDA backend if available
-        self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-        self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+        try:
+            # Load YOLO model using OpenCV DNN
+            self.net = cv2.dnn.readNetFromONNX(model_path)
+            self.get_logger().info('Successfully loaded ONNX model')
+            
+            # Try to use CUDA backend if available
+            try:
+                self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+                self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+                self.get_logger().info('Using CUDA backend')
+            except Exception as e:
+                self.get_logger().warn(f'CUDA backend not available: {str(e)}')
+                self.get_logger().warn('Using CPU backend')
+                self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_DEFAULT)
+                self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+                
+        except Exception as e:
+            self.get_logger().error(f'Failed to load model: {str(e)}')
+            raise RuntimeError(f'Failed to load model: {str(e)}')
         
         # Initialize camera
         self.cap = cv2.VideoCapture(0)
@@ -78,77 +100,81 @@ class YOLODetectionNode(Node):
             self.get_logger().warn('Failed to grab frame')
             return
         
-        # Prepare image for inference
-        blob = cv2.dnn.blobFromImage(frame, 1/255.0, (self.input_width, self.input_height), 
-                                   swapRB=True, crop=False)
-        self.net.setInput(blob)
-        
-        # Run inference
-        outputs = self.net.forward()
-        
-        # Process detections
-        detection_list = []
-        frame_height, frame_width = frame.shape[:2]
-        
-        # YOLOv8 output format: (num_boxes, 84) where 84 = 4(bbox) + 80(class scores)
-        outputs = outputs[0].transpose((1, 0))
-        
-        # Process each detection
-        for detection in outputs:
-            confidence = float(detection[4])
-            if confidence < self.conf_threshold:
-                continue
+        try:
+            # Prepare image for inference
+            blob = cv2.dnn.blobFromImage(frame, 1/255.0, (self.input_width, self.input_height), 
+                                       swapRB=True, crop=False)
+            self.net.setInput(blob)
             
-            # Get class scores
-            class_scores = detection[4:]
-            class_id = np.argmax(class_scores)
+            # Run inference
+            outputs = self.net.forward()
             
-            if class_id < len(self.class_names):  # Make sure class_id is valid
-                # Get bounding box coordinates
-                x = float(detection[0])
-                y = float(detection[1])
-                w = float(detection[2])
-                h = float(detection[3])
+            # Process detections
+            detection_list = []
+            frame_height, frame_width = frame.shape[:2]
+            
+            # YOLOv8 output format: (num_boxes, 84) where 84 = 4(bbox) + 80(class scores)
+            outputs = outputs[0].transpose((1, 0))
+            
+            # Process each detection
+            for detection in outputs:
+                confidence = float(detection[4])
+                if confidence < self.conf_threshold:
+                    continue
                 
-                # Convert to corner coordinates
-                x1 = int((x - w/2) * frame_width)
-                y1 = int((y - h/2) * frame_height)
-                x2 = int((x + w/2) * frame_width)
-                y2 = int((y + h/2) * frame_height)
+                # Get class scores
+                class_scores = detection[4:]
+                class_id = np.argmax(class_scores)
                 
-                # Create detection dict
-                detection_info = {
-                    'class': self.class_names[class_id],
-                    'confidence': round(confidence, 3),
-                    'bbox': {
-                        'x1': x1,
-                        'y1': y1,
-                        'x2': x2,
-                        'y2': y2
+                if class_id < len(self.class_names):  # Make sure class_id is valid
+                    # Get bounding box coordinates
+                    x = float(detection[0])
+                    y = float(detection[1])
+                    w = float(detection[2])
+                    h = float(detection[3])
+                    
+                    # Convert to corner coordinates
+                    x1 = int((x - w/2) * frame_width)
+                    y1 = int((y - h/2) * frame_height)
+                    x2 = int((x + w/2) * frame_width)
+                    y2 = int((y + h/2) * frame_height)
+                    
+                    # Create detection dict
+                    detection_info = {
+                        'class': self.class_names[class_id],
+                        'confidence': round(confidence, 3),
+                        'bbox': {
+                            'x1': x1,
+                            'y1': y1,
+                            'x2': x2,
+                            'y2': y2
+                        }
                     }
-                }
-                detection_list.append(detection_info)
-                
-                # Draw on frame
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                cv2.putText(frame, 
-                           f'{self.class_names[class_id]} {confidence:.2f}',
-                           (x1, y1 - 10),
-                           cv2.FONT_HERSHEY_SIMPLEX,
-                           0.5,
-                           (0, 255, 0),
-                           2)
-        
-        # Publish detections
-        if detection_list:
-            msg = String()
-            msg.data = json.dumps(detection_list)
-            self.detection_pub.publish(msg)
-            self.get_logger().debug(f'Published {len(detection_list)} detections')
-        
-        # Display frame
-        cv2.imshow(self.window_name, frame)
-        cv2.waitKey(1)
+                    detection_list.append(detection_info)
+                    
+                    # Draw on frame
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    cv2.putText(frame, 
+                               f'{self.class_names[class_id]} {confidence:.2f}',
+                               (x1, y1 - 10),
+                               cv2.FONT_HERSHEY_SIMPLEX,
+                               0.5,
+                               (0, 255, 0),
+                               2)
+            
+            # Publish detections
+            if detection_list:
+                msg = String()
+                msg.data = json.dumps(detection_list)
+                self.detection_pub.publish(msg)
+                self.get_logger().debug(f'Published {len(detection_list)} detections')
+            
+            # Display frame
+            cv2.imshow(self.window_name, frame)
+            cv2.waitKey(1)
+            
+        except Exception as e:
+            self.get_logger().error(f'Error during inference: {str(e)}')
     
     def destroy_node(self):
         """Cleanup when node is shut down"""
