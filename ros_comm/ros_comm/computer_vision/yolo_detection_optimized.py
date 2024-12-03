@@ -29,7 +29,15 @@ class YOLODetectionNode(Node):
                 self.get_logger().error(f"Model not found at {model_path}")
                 raise FileNotFoundError(f"Model not found at {model_path}")
                 
-            self.net = jetson.inference.detectNet(model_path, threshold=0.5)
+            # Initialize with exact tensor names from engine
+            argv = [
+                f'--model={model_path}',
+                '--input_blob=images',
+                '--output_cvg=output0',
+                '--threshold=0.5'
+            ]
+            
+            self.net = jetson.inference.detectNet(argv=argv)
             self.get_logger().info(f'Model loaded from: {model_path}')
             
         except Exception as e:
