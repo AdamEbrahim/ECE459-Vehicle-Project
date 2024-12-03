@@ -20,22 +20,18 @@ class YOLODetectionNode(Node):
         # Load YOLO model using TensorRT
         current_dir = os.path.dirname(os.path.abspath(__file__))
         model_path = os.path.join(current_dir, 'models', 'best.onnx')
-        labels_path = os.path.join(current_dir, 'models', 'labels.txt')
         
         # Configure network settings with more detailed parameters
         self.net = jetson.inference.detectNet(argv=[
             '--model=' + model_path,
-            '--labels=' + labels_path,
             '--input-blob=images',
             '--output-blob=output0',
             '--input-width=640',
             '--input-height=640',
-            '--threshold=0.5',
-            '--overlay=box,labels,conf'  # Specify overlay options
+            '--threshold=0.5'
         ])
         
         self.get_logger().info(f'Model loaded from: {model_path}')
-        self.get_logger().info(f'Labels loaded from: {labels_path}')
         
         # Initialize camera using the working approach from basic_cv_detection
         try:
@@ -51,7 +47,7 @@ class YOLODetectionNode(Node):
             self.get_logger().error("Failed to open display window")
             raise RuntimeError("Display initialization failed")
         
-        # Class mapping
+        # Class mapping (hardcoded since these are our specific classes)
         self.class_names = ['stop', 'yield', 'signalAhead', 'pedestrianCrossing', 'speedLimit25', 'speedLimit35']
         
         self.get_logger().info('YOLOv8 Detection Node Initialized')
@@ -63,7 +59,12 @@ class YOLODetectionNode(Node):
             
             # Create resized input for the model (640x640)
             input_frame = jetson.utils.cudaAllocMapped(width=640, height=640, format='rgba8')
-            jetson.utils.cudaResize(frame, width, height, input_frame, 640, 640)
+            
+            # Calculate scale factor
+            scale = min(640/width, 640/height)
+            
+            # Resize using scale factor
+            jetson.utils.cudaResize(frame, input_frame, scale)
             
             # Create output image for overlay
             output_frame = jetson.utils.cudaAllocMapped(width=width, height=height, format='rgba8')
