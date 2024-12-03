@@ -43,7 +43,7 @@ setup(
             'esp_forwarder = ros_comm.esp.esp_forwarder2:main',
             'user_control = ros_comm.control.user_control:main',
             'basic_cv_detection = ros_comm.computer_vision.basic_cv_detection:main',
-            'yolo_detection_optimized = ros_comm.computer_vision.yolo_detection_optimized:main',
+            'object_detection = ros_comm.computer_vision.object_detection_node:main',
         ],
     }
 )
