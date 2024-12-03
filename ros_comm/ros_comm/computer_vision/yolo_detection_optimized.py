@@ -61,22 +61,40 @@ class YOLODetectionNode(Node):
             # Capture frame in RGBA format
             frame, width, height = self.camera.CaptureRGBA()
             
-            # Detect objects
-            detections = self.net.Detect(frame, width, height)
+            # Create resized input for the model (640x640)
+            input_frame = jetson.utils.cudaAllocMapped(width=640, height=640, format='rgba8')
+            jetson.utils.cudaResize(frame, width, height, input_frame, 640, 640)
+            
+            # Create output image for overlay
+            output_frame = jetson.utils.cudaAllocMapped(width=width, height=height, format='rgba8')
+            jetson.utils.cudaMemcpy(output_frame, frame)  # Copy original frame
+            
+            # Run detection on resized input
+            detections = self.net.Detect(input_frame, 640, 640, overlay=output_frame)
+            
+            # Scale factor to map detections back to original size
+            scale_x = width / 640
+            scale_y = height / 640
             
             # Process detections
             detection_results = []
             for detection in detections:
                 class_id = int(detection.ClassID)
                 if class_id < len(self.class_names):
+                    # Scale detection coordinates back to original size
+                    left = detection.Left * scale_x
+                    top = detection.Top * scale_y
+                    det_width = detection.Width * scale_x
+                    det_height = detection.Height * scale_y
+                    
                     detection_results.append({
                         'class': self.class_names[class_id],
                         'confidence': float(detection.Confidence),
                         'bbox': {
-                            'x': float(detection.Left),
-                            'y': float(detection.Top),
-                            'width': float(detection.Width),
-                            'height': float(detection.Height)
+                            'x': float(left),
+                            'y': float(top),
+                            'width': float(det_width),
+                            'height': float(det_height)
                         }
                     })
                     self.get_logger().info(f'Detected {self.class_names[class_id]} with confidence {detection.Confidence}')
@@ -89,7 +107,7 @@ class YOLODetectionNode(Node):
                 self.get_logger().debug(f'Published detections: {msg.data}')
             
             # Display output
-            self.display.RenderOnce(frame, width, height)
+            self.display.RenderOnce(output_frame, width, height)
             self.display.SetTitle(f"Object Detection | Network {self.net.GetNetworkFPS():.0f} FPS")
             
         except Exception as e:
