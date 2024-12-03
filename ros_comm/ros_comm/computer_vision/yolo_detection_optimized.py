@@ -59,30 +59,21 @@ class YOLODetectionNode(Node):
             self.get_logger().info(f'Model file size: {os.path.getsize(model_path)} bytes')
             
             try:
-                # First attempt: Try loading with default input/output names
-                self.get_logger().info('Attempting to load model with default names...')
+                # Initialize the detection network with YOLO v8 blob names
                 self.net = jetson.inference.detectNet(
                     model=model_path,
                     labels=labels_path,
+                    input_blob='images',
+                    output_blob='output0',
                     threshold=self.detection_threshold
                 )
-            except Exception as e1:
-                self.get_logger().warn(f'First loading attempt failed: {str(e1)}')
-                try:
-                    # Second attempt: Try with explicit YOLO naming
-                    self.get_logger().info('Attempting to load model with YOLO naming...')
-                    self.net = jetson.inference.detectNet(
-                        model=model_path,
-                        labels=labels_path,
-                        input_blob="images",
-                        output_cvg="output0",
-                        output_bbox="output1",
-                        threshold=self.detection_threshold
-                    )
-                except Exception as e2:
-                    self.get_logger().error(f'Second loading attempt failed: {str(e2)}')
-                    self.get_logger().error('Both loading attempts failed. Please verify model format and blob names.')
-                    raise RuntimeError("Failed to load detection network")
+                self.get_logger().info('Successfully loaded model with YOLO v8 naming')
+            except Exception as e:
+                self.get_logger().error(f'Model loading failed: {str(e)}')
+                raise RuntimeError('Failed to load detection network')
+
+            if not self.net:
+                raise RuntimeError('Network initialization failed')
             
             # Initialize camera and display
             self.camera = jetson.utils.gstCamera(1280, 720, "/dev/video0")
