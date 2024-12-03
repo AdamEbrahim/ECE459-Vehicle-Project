@@ -5,9 +5,8 @@ from std_msgs.msg import String
 import json
 import cv2
 import numpy as np
-import tensorrt as trt
-import pycuda.driver as cuda
-import pycuda.autoinit
+import jetson.inference
+import jetson.utils
 import os
 
 class YOLODetectionNode(Node):
@@ -22,127 +21,76 @@ class YOLODetectionNode(Node):
             # Define class names
             self.class_names = ['stop', 'yield', 'signalAhead', 'pedestrianCrossing', 'speedLimit25', 'speedLimit35']
             
-            # Load TensorRT engine
+            # Load model - simplified initialization
             current_dir = os.path.dirname(os.path.abspath(__file__))
             model_path = os.path.join(current_dir, 'models', 'best.engine')
             
             if not os.path.exists(model_path):
                 self.get_logger().error(f"Model not found at {model_path}")
                 raise FileNotFoundError(f"Model not found at {model_path}")
-            
-            # Initialize TensorRT
-            logger = trt.Logger(trt.Logger.INFO)
-            with open(model_path, 'rb') as f:
-                engine_data = f.read()
-            
-            runtime = trt.Runtime(logger)
-            self.engine = runtime.deserialize_cuda_engine(engine_data)
-            self.context = self.engine.create_execution_context()
-            
-            # Allocate memory
-            self.inputs = []
-            self.outputs = []
-            self.bindings = []
-            
-            for binding in self.engine:
-                size = trt.volume(self.engine.get_binding_shape(binding))
-                dtype = trt.nptype(self.engine.get_binding_dtype(binding))
-                # Allocate host and device memory
-                host_mem = cuda.pagelocked_empty(size, dtype)
-                device_mem = cuda.mem_alloc(host_mem.nbytes)
-                # Append the device buffer to bindings.
-                self.bindings.append(int(device_mem))
-                # Append to the appropriate list.
-                if self.engine.binding_is_input(binding):
-                    self.inputs.append({'host': host_mem, 'device': device_mem})
-                else:
-                    self.outputs.append({'host': host_mem, 'device': device_mem})
-            
-            self.get_logger().info(f'Model loaded successfully from: {model_path}')
-            
-            # Initialize camera
-            self.cap = cv2.VideoCapture(0)
-            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-            
-            # Create timer for detection
-            self.create_timer(1.0/30.0, self.detect_callback)  # 30 FPS
+                
+            self.net = jetson.inference.detectNet(model_path, threshold=0.5)
+            self.get_logger().info(f'Model loaded from: {model_path}')
             
         except Exception as e:
-            self.get_logger().error(f"Failed to initialize: {str(e)}")
+            self.get_logger().error(f"Failed to load model: {str(e)}")
             raise
-    
-    def preprocess_image(self, frame):
-        # Resize to model input size
-        input_size = (640, 640)
-        resized = cv2.resize(frame, input_size)
-        # Convert to RGB and normalize
-        rgb = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
-        normalized = rgb.astype(np.float32) / 255.0
-        # Change to CHW format
-        chw = normalized.transpose((2, 0, 1))
-        # Add batch dimension
-        return np.expand_dims(chw, axis=0)
-    
-    def detect_callback(self):
+        
+        # Initialize camera
         try:
-            ret, frame = self.cap.read()
-            if not ret:
-                self.get_logger().warn("Failed to grab frame")
-                return
-                
-            # Preprocess image
-            preprocessed = self.preprocess_image(frame)
+            self.camera = jetson.utils.gstCamera(1280, 720, "/dev/video0")
+            self.get_logger().info("Successfully initialized USB webcam")
+        except Exception as e:
+            self.get_logger().error(f"Failed to initialize camera: {str(e)}")
+            raise
             
-            # Copy preprocessed data to input buffer
-            np.copyto(self.inputs[0]['host'], preprocessed.ravel())
+        # Create timer for detection
+        self.create_timer(0.1, self.detection_callback)  # 10Hz detection rate
+        self.get_logger().info('YOLOv8 Detection Node Initialized')
+
+    def detection_callback(self):
+        try:
+            # Capture frame
+            frame, width, height = self.camera.CaptureRGBA()
             
-            # Transfer input data to device
-            for inp in self.inputs:
-                cuda.memcpy_htod(inp['device'], inp['host'])
-                
-            # Run inference
-            self.context.execute_v2(self.bindings)
+            # Log input frame info
+            self.get_logger().debug(f'Input frame: {width}x{height}')
             
-            # Transfer predictions back
-            for out in self.outputs:
-                cuda.memcpy_dtoh(out['host'], out['device'])
+            # Run detection
+            detections = self.net.Detect(frame)
             
-            # Process detections (output shape: 1x10x8400)
-            predictions = self.outputs[0]['host'].reshape(1, 10, 8400)
-            
-            # Get detections
-            detections = []
-            for i in range(predictions.shape[2]):  # iterate over 8400 predictions
-                class_scores = predictions[0, 4:, i]  # class scores start at index 4
-                class_id = np.argmax(class_scores)
-                confidence = class_scores[class_id]
-                
-                if confidence > 0.5:  # confidence threshold
-                    x, y, w, h = predictions[0, :4, i]
-                    detection = {
+            # Process detections
+            detection_results = []
+            for detection in detections:
+                class_id = int(detection.ClassID)
+                if class_id < len(self.class_names):
+                    detection_results.append({
                         'class': self.class_names[class_id],
-                        'confidence': float(confidence),
-                        'bbox': [float(x), float(y), float(w), float(h)]
-                    }
-                    detections.append(detection)
+                        'confidence': float(detection.Confidence),
+                        'bbox': {
+                            'x': float(detection.Left),
+                            'y': float(detection.Top),
+                            'width': float(detection.Width),
+                            'height': float(detection.Height)
+                        }
+                    })
+                    self.get_logger().info(f'Detected {self.class_names[class_id]} with confidence {detection.Confidence}')
             
-            # Publish detections
-            msg = String()
-            msg.data = json.dumps({'detections': detections})
-            self.detection_publisher.publish(msg)
+            # Publish results
+            if detection_results:
+                msg = String()
+                msg.data = json.dumps(detection_results)
+                self.detection_publisher.publish(msg)
+                self.get_logger().debug(f'Published detections: {msg.data}')
             
         except Exception as e:
-            self.get_logger().error(f"Detection error: {str(e)}")
-    
-    def __del__(self):
-        if hasattr(self, 'cap'):
-            self.cap.release()
+            self.get_logger().error(f'Detection error: {str(e)}')
 
 def main(args=None):
     rclpy.init(args=args)
     node = YOLODetectionNode()
     rclpy.spin(node)
+    node.destroy_node()
     rclpy.shutdown()
 
 if __name__ == '__main__':
