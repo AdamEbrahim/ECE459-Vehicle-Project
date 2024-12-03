@@ -29,7 +29,7 @@ class YOLODetectionNode(Node):
                 self.get_logger().error(f"Model not found at {model_path}")
                 raise FileNotFoundError(f"Model not found at {model_path}")
                 
-            self.net = jetson.inference.detectNet("model.engine", threshold=0.5)
+            self.net = jetson.inference.detectNet(model_path, threshold=0.5)
             self.get_logger().info(f'Model loaded from: {model_path}')
             
         except Exception as e:

@@ -173,6 +173,31 @@ To modify these parameters:
    ros2 node info /robot_controller
    ```
 
+## YOLOv8 Model Conversion
+
+The computer vision system uses a YOLOv8 model converted to TensorRT format for optimal performance on the Jetson Nano. Follow these steps to convert your model:
+
+### 1. Convert PT to ONNX (On Development Machine)
+```bash
+# In the computer_vision directory
+python
+>>> from ultralytics import YOLO
+>>> model = YOLO('models/best.pt')
+>>> success = model.export(format='onnx', opset=11, simplify=True, dynamic=False, imgsz=640, half=True)
+```
+
+### 2. Convert ONNX to TensorRT (On Jetson)
+```bash
+# Copy best.onnx to Jetson
+scp models/best.onnx jetson:~/ros2_ws/install/ros_comm/lib/python3.6/site-packages/ros_comm/computer_vision/models/
+
+# On Jetson, convert to TensorRT engine
+cd ~/ros2_ws/install/ros_comm/lib/python3.6/site-packages/ros_comm/computer_vision/models
+/usr/src/tensorrt/bin/trtexec --onnx=best.onnx --saveEngine=best.engine --fp16 --workspace=1024 --verbose
+```
+
+Note: The TensorRT conversion process may take ~10 minutes on the Jetson Nano.
+
 ## Troubleshooting
 
 1. **No Motor Response**
