@@ -8,6 +8,7 @@ import threading
 import time
 import json
 import os
+import signal
 
 class YOLODetectionNode(Node):
     def __init__(self):
@@ -32,7 +33,7 @@ class YOLODetectionNode(Node):
         
         try:
             # Initialize the detection network
-            model_path = os.path.join(model_dir, 'best.onnx')  # Use best.onnx specifically
+            model_path = os.path.join(model_dir, 'best.onnx')
             labels_path = os.path.join(model_dir, 'labels.txt')
 
             if not os.path.exists(model_path):
@@ -41,27 +42,50 @@ class YOLODetectionNode(Node):
                 raise FileNotFoundError(f'Labels file not found: {labels_path}')
 
             self.get_logger().info(f'Loading ONNX model from: {model_path}')
-            self.net = jetson.inference.detectNet(
-                model=model_path,
-                labels=labels_path,
-                input_blob="input",
-                output_cvg="output_0",
-                output_bbox="output_1",
-                threshold=self.detection_threshold
-            )
+            self.get_logger().info(f'Model file size: {os.path.getsize(model_path)} bytes')
             
-            # Initialize camera with higher resolution for better detection
+            try:
+                # First attempt: Try loading with default input/output names
+                self.get_logger().info('Attempting to load model with default names...')
+                self.net = jetson.inference.detectNet(
+                    model=model_path,
+                    labels=labels_path,
+                    threshold=self.detection_threshold
+                )
+            except Exception as e1:
+                self.get_logger().warn(f'First loading attempt failed: {str(e1)}')
+                try:
+                    # Second attempt: Try with explicit YOLO naming
+                    self.get_logger().info('Attempting to load model with YOLO naming...')
+                    self.net = jetson.inference.detectNet(
+                        model=model_path,
+                        labels=labels_path,
+                        input_blob="images",
+                        output_cvg="output0",
+                        output_bbox="output1",
+                        threshold=self.detection_threshold
+                    )
+                except Exception as e2:
+                    self.get_logger().error(f'Second loading attempt failed: {str(e2)}')
+                    self.get_logger().error('Both loading attempts failed. Please verify model format and blob names.')
+                    raise RuntimeError("Failed to load detection network")
+            
+            # Initialize camera and display
             self.camera = jetson.utils.gstCamera(1280, 720, "/dev/video0")
             self.display = jetson.utils.glDisplay()
-            
+            if not self.display.IsOpen():
+                self.get_logger().error("Failed to open display window")
+                return
+                
             self.get_logger().info('Camera and display initialized')
+            
+            # Control flag for the detection loop
+            self.running = True
             
             # Start detection thread
             self.detection_thread = threading.Thread(target=self.run_detection_loop)
             self.detection_thread.daemon = True
             self.detection_thread.start()
-            
-            self.get_logger().info('YOLO Detection Node initialized successfully')
             
         except Exception as e:
             self.get_logger().error(f'Failed to initialize: {str(e)}')
@@ -70,7 +94,7 @@ class YOLODetectionNode(Node):
     def run_detection_loop(self):
         """Main detection loop"""
         try:
-            while self.display.IsOpen():
+            while self.running and self.display.IsOpen():
                 # Capture frame
                 img, width, height = self.camera.CaptureRGBA()
                 
@@ -96,6 +120,7 @@ class YOLODetectionNode(Node):
                             }
                         }
                         detection_msg['detections'].append(det_info)
+                        self.get_logger().info(f'Detected: {det_info["class"]} ({det_info["confidence"]:.2f})')
                     
                     # Publish detections
                     msg = String()
@@ -104,17 +129,42 @@ class YOLODetectionNode(Node):
                 
                 # Display the image
                 self.display.RenderOnce(img, width, height)
-                self.display.SetTitle(f"Object Detection | Network {self.net.GetNetworkFPS():.0f} FPS")
+                self.display.SetTitle(f"YOLO Detection | Network {self.net.GetNetworkFPS():.0f} FPS")
                 
         except Exception as e:
             self.get_logger().error(f'Detection loop error: {str(e)}')
+            self.running = False
+
+    def cleanup(self):
+        """Cleanup resources"""
+        self.get_logger().info('Cleaning up...')
+        self.running = False
+        if hasattr(self, 'detection_thread'):
+            self.detection_thread.join(timeout=1.0)
+        if hasattr(self, 'display'):
+            self.display.Close()
 
 def main(args=None):
     rclpy.init(args=args)
+    
+    # Create and initialize node
     node = YOLODetectionNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    
+    # Handle shutdown gracefully
+    def signal_handler(sig, frame):
+        node.get_logger().info('Shutdown signal received...')
+        node.cleanup()
+        rclpy.shutdown()
+        
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.cleanup()
+        rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
