@@ -1,8 +1,0 @@
-path: ../data/tiny_lisa  # dataset root dir
-train: train/images  # train images
-val: val/images  # val images
-test: test/images  # test images
-
-# Classes
-nc: 6  # number of classes
-names: ['stop', 'yield', 'signalAhead', 'pedestrianCrossing', 'speedLimit25', 'speedLimit35']  # class names
