@@ -61,8 +61,8 @@ class YOLODetectionNode(Node):
             input_frame = jetson.utils.cudaAllocMapped(width=640, height=640, format='rgba8')
             
             # Resize the input frame
-            jetson.utils.cudaResize(src=frame, 
-                                  dst=input_frame,
+            jetson.utils.cudaResize(input=frame, 
+                                  output=input_frame,
                                   width=640,
                                   height=640)
             
