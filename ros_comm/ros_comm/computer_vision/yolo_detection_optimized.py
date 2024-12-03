@@ -34,18 +34,19 @@ class YOLODetectionNode(Node):
             '--threshold=0.5'
         ])
         
-        # Initialize camera (try different formats if CSI fails)
+        # Initialize camera using the working approach from basic_cv_detection
         try:
-            self.camera = jetson.utils.videoSource("csi://0")
+            self.camera = jetson.utils.gstCamera(1280, 720, "/dev/video0")
+            self.get_logger().info("Successfully initialized USB webcam")
         except Exception as e:
-            self.get_logger().warn(f"CSI camera failed, trying V4L2: {str(e)}")
-            try:
-                self.camera = jetson.utils.videoSource("/dev/video0")
-            except Exception as e2:
-                self.get_logger().error(f"V4L2 also failed: {str(e2)}")
-                raise RuntimeError("No camera available")
-        
-        self.display = jetson.utils.videoOutput("display://0")
+            self.get_logger().error(f"Failed to initialize camera: {str(e)}")
+            raise RuntimeError("Camera initialization failed")
+            
+        # Initialize display
+        self.display = jetson.utils.glDisplay()
+        if not self.display.IsOpen():
+            self.get_logger().error("Failed to open display window")
+            raise RuntimeError("Display initialization failed")
         
         # Class mapping
         self.class_names = ['stop', 'yield', 'signalAhead', 'pedestrianCrossing', 'speedLimit25', 'speedLimit35']
@@ -54,11 +55,11 @@ class YOLODetectionNode(Node):
     
     def detection_callback(self):
         try:
-            # Capture frame
-            frame = self.camera.Capture()
+            # Capture frame in RGBA format
+            frame, width, height = self.camera.CaptureRGBA()
             
             # Detect objects
-            detections = self.net.Detect(frame)
+            detections = self.net.Detect(frame, width, height)
             
             # Process detections
             detection_results = []
@@ -83,9 +84,9 @@ class YOLODetectionNode(Node):
                 self.detection_publisher.publish(msg)
                 self.get_logger().debug(f'Published detections: {msg.data}')
             
-            # Display output (optional)
-            self.display.Render(frame)
-            self.display.SetStatus("Object Detection | Network {:.0f} FPS".format(self.net.GetNetworkFPS()))
+            # Display output
+            self.display.RenderOnce(frame, width, height)
+            self.display.SetTitle(f"Object Detection | Network {self.net.GetNetworkFPS():.0f} FPS")
             
         except Exception as e:
             self.get_logger().error(f'Detection error: {str(e)}')
