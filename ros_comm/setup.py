@@ -41,6 +41,7 @@ setup(
             'user_control = ros_comm.control.user_control:main',
             'yolo_detection = ros_comm.computer_vision.yolo_detection:main',
             'basic_cv_detection = ros_comm.computer_vision.basic_cv_detection:main',
+            'yolo_detection_optimized = ros_comm.computer_vision.yolo_detection_optimized:main',
         ],
     }
 )
