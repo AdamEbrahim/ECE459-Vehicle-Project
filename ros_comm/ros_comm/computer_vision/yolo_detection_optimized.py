@@ -61,13 +61,13 @@ class YOLODetectionNode(Node):
             self.get_logger().info(f'Input frame: {width}x{height} format={frame.format}')
             
             # Create resized input for the model (640x640)
-            input_frame = cudaAllocMapped(width=640, height=640, format=frame.format)
+            input_frame = cudaAllocMapped(width=640, height=640, format='rgba32f')
             
             # Resize the input frame (using positional args: input, output)
             cudaResize(frame, input_frame)
             
             # Create output image for overlay
-            output_frame = cudaAllocMapped(width=width, height=height, format=frame.format)
+            output_frame = cudaAllocMapped(width=width, height=height, format='rgba32f')
             cudaMemcpy(output_frame, frame)  # Copy original frame
             
             # Run detection on resized input
