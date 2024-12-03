@@ -29,19 +29,33 @@ class YOLODetectionNode(Node):
 
         # Get the path to the model files
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        model_dir = os.path.join(current_dir, 'models')
-        
         try:
             # Initialize the detection network
-            model_path = os.path.join(model_dir, 'best.onnx')
-            labels_path = os.path.join(model_dir, 'labels.txt')
-
-            if not os.path.exists(model_path):
-                raise FileNotFoundError(f'Model file not found: {model_path}')
-            if not os.path.exists(labels_path):
-                raise FileNotFoundError(f'Labels file not found: {labels_path}')
+            # Try multiple possible locations for the model files
+            possible_model_dirs = [
+                os.path.join(current_dir, 'models'),  # Local development
+                os.path.join(os.path.dirname(os.path.dirname(current_dir)), 'models'),  # One level up
+                os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(current_dir))), 'models'),  # Two levels up
+            ]
+            
+            model_path = None
+            labels_path = None
+            
+            # Search for model files
+            for dir_path in possible_model_dirs:
+                temp_model = os.path.join(dir_path, 'best.onnx')
+                temp_labels = os.path.join(dir_path, 'labels.txt')
+                if os.path.exists(temp_model) and os.path.exists(temp_labels):
+                    model_path = temp_model
+                    labels_path = temp_labels
+                    self.get_logger().info(f'Found model files in: {dir_path}')
+                    break
+            
+            if not model_path or not labels_path:
+                raise FileNotFoundError(f'Model files not found in any of the searched directories: {possible_model_dirs}')
 
             self.get_logger().info(f'Loading ONNX model from: {model_path}')
+            self.get_logger().info(f'Using labels from: {labels_path}')
             self.get_logger().info(f'Model file size: {os.path.getsize(model_path)} bytes')
             
             try:

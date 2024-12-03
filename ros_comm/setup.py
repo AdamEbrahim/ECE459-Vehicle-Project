@@ -20,6 +20,9 @@ setup(
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
         # Include config files
         (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
+        # Include model files
+        (os.path.join('lib', 'python3.6', 'site-packages', package_name, 'computer_vision', 'models'),
+         glob('ros_comm/computer_vision/models/*.*')),
     ],
     install_requires=[
         'setuptools',
