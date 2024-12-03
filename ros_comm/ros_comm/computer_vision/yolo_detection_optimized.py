@@ -20,19 +20,22 @@ class YOLODetectionNode(Node):
         # Load YOLO model using TensorRT
         current_dir = os.path.dirname(os.path.abspath(__file__))
         model_path = os.path.join(current_dir, 'models', 'best.onnx')
+        labels_path = os.path.join(current_dir, 'models', 'labels.txt')
         
         # Configure network settings with more detailed parameters
         self.net = jetson.inference.detectNet(argv=[
             '--model=' + model_path,
-            '--labels=' + os.path.join(current_dir, 'models', 'labels.txt'),
+            '--labels=' + labels_path,
             '--input-blob=images',
             '--output-blob=output0',
-            '--output-cvg=scores',
-            '--output-bbox=bboxes',
             '--input-width=640',
             '--input-height=640',
-            '--threshold=0.5'
+            '--threshold=0.5',
+            '--network-type=custom'  # Specify custom network
         ])
+        
+        self.get_logger().info(f'Model loaded from: {model_path}')
+        self.get_logger().info(f'Labels loaded from: {labels_path}')
         
         # Initialize camera using the working approach from basic_cv_detection
         try:
@@ -58,8 +61,11 @@ class YOLODetectionNode(Node):
             # Capture frame in RGBA format
             frame, width, height = self.camera.CaptureRGBA()
             
+            # Create output image for overlay
+            output = jetson.utils.cudaAllocMapped(width=width, height=height, format='rgba8')
+            
             # Detect objects
-            detections = self.net.Detect(frame, width, height)
+            detections = self.net.Detect(frame, width, height, overlay=output)
             
             # Process detections
             detection_results = []
@@ -76,6 +82,7 @@ class YOLODetectionNode(Node):
                             'height': float(detection.Height)
                         }
                     })
+                    self.get_logger().info(f'Detected {self.class_names[class_id]} with confidence {detection.Confidence}')
             
             # Publish results
             if detection_results:
@@ -85,7 +92,7 @@ class YOLODetectionNode(Node):
                 self.get_logger().debug(f'Published detections: {msg.data}')
             
             # Display output
-            self.display.RenderOnce(frame, width, height)
+            self.display.RenderOnce(output if detections else frame, width, height)
             self.display.SetTitle(f"Object Detection | Network {self.net.GetNetworkFPS():.0f} FPS")
             
         except Exception as e:
