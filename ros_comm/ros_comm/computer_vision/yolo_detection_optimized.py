@@ -6,7 +6,7 @@ import json
 import cv2
 import numpy as np
 import jetson.inference
-import jetson.utils
+from jetson.utils import gstCamera, glDisplay, cudaAllocMapped, cudaResize, cudaMemcpy
 import os
 
 class YOLODetectionNode(Node):
@@ -35,14 +35,14 @@ class YOLODetectionNode(Node):
         
         # Initialize camera using the working approach from basic_cv_detection
         try:
-            self.camera = jetson.utils.gstCamera(1280, 720, "/dev/video0")
+            self.camera = gstCamera(1280, 720, "/dev/video0")
             self.get_logger().info("Successfully initialized USB webcam")
         except Exception as e:
             self.get_logger().error(f"Failed to initialize camera: {str(e)}")
             raise RuntimeError("Camera initialization failed")
             
         # Initialize display
-        self.display = jetson.utils.glDisplay()
+        self.display = glDisplay()
         if not self.display.IsOpen():
             self.get_logger().error("Failed to open display window")
             raise RuntimeError("Display initialization failed")
@@ -58,17 +58,14 @@ class YOLODetectionNode(Node):
             frame, width, height = self.camera.CaptureRGBA()
             
             # Create resized input for the model (640x640)
-            input_frame = jetson.utils.cudaAllocMapped(width=640, height=640, format='rgba8')
+            input_frame = cudaAllocMapped(width=640, height=640, format='rgba8')
             
-            # Resize the input frame
-            jetson.utils.cudaResize(input=frame, 
-                                  output=input_frame,
-                                  width=640,
-                                  height=640)
+            # Resize the input frame (using positional args: input, output)
+            cudaResize(frame, input_frame)
             
             # Create output image for overlay
-            output_frame = jetson.utils.cudaAllocMapped(width=width, height=height, format='rgba8')
-            jetson.utils.cudaMemcpy(output_frame, frame)  # Copy original frame
+            output_frame = cudaAllocMapped(width=width, height=height, format='rgba8')
+            cudaMemcpy(output_frame, frame)  # Copy original frame
             
             # Run detection on resized input
             detections = self.net.Detect(input_frame, 640, 640, overlay=output_frame)
