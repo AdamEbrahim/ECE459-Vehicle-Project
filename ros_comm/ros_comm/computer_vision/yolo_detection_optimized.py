@@ -31,7 +31,7 @@ class YOLODetectionNode(Node):
             '--input-width=640',
             '--input-height=640',
             '--threshold=0.5',
-            '--network-type=custom'  # Specify custom network
+            '--overlay=box,labels,conf'  # Specify overlay options
         ])
         
         self.get_logger().info(f'Model loaded from: {model_path}')
@@ -61,11 +61,8 @@ class YOLODetectionNode(Node):
             # Capture frame in RGBA format
             frame, width, height = self.camera.CaptureRGBA()
             
-            # Create output image for overlay
-            output = jetson.utils.cudaAllocMapped(width=width, height=height, format='rgba8')
-            
             # Detect objects
-            detections = self.net.Detect(frame, width, height, overlay=output)
+            detections = self.net.Detect(frame, width, height)
             
             # Process detections
             detection_results = []
@@ -92,7 +89,7 @@ class YOLODetectionNode(Node):
                 self.get_logger().debug(f'Published detections: {msg.data}')
             
             # Display output
-            self.display.RenderOnce(output if detections else frame, width, height)
+            self.display.RenderOnce(frame, width, height)
             self.display.SetTitle(f"Object Detection | Network {self.net.GetNetworkFPS():.0f} FPS")
             
         except Exception as e:
