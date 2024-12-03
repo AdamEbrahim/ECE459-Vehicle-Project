@@ -6,14 +6,14 @@ import json
 import cv2
 import numpy as np
 import jetson.inference
-from jetson.utils import gstCamera, glDisplay, cudaAllocMapped, cudaResize, cudaMemcpy
+import jetson.utils
 import os
 
 class YOLODetectionNode(Node):
     def __init__(self):
         super().__init__('yolo_detection_node')
         
-        # Initialize publishers and subscribers
+        # Initialize publishers
         self.detection_publisher = self.create_publisher(String, 'detection_data', 10)
         
         # Initialize model
@@ -21,38 +21,43 @@ class YOLODetectionNode(Node):
             # Define class names
             self.class_names = ['stop', 'yield', 'signalAhead', 'pedestrianCrossing', 'speedLimit25', 'speedLimit35']
             
-            # Load model
-            model_path = os.path.expanduser('~/best_openvino_model_6n')
-            self.net = jetson.inference.detectNet(model=model_path, 
-                                                labels=','.join(self.class_names),
-                                                input_blob='images',
-                                                output_cvg='output_1',
-                                                output_bbox='output_2',
-                                                threshold=0.5)
+            # Load model - simplified initialization
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            model_path = os.path.join(current_dir, 'models', 'best.engine')
             
-            self.get_logger().info("Successfully loaded model")
+            if not os.path.exists(model_path):
+                self.get_logger().error(f"Model not found at {model_path}")
+                raise FileNotFoundError(f"Model not found at {model_path}")
+                
+            self.net = jetson.inference.detectNet("model.engine", threshold=0.5)
+            self.get_logger().info(f'Model loaded from: {model_path}')
+            
         except Exception as e:
             self.get_logger().error(f"Failed to load model: {str(e)}")
             raise
         
-        # Initialize camera using the working approach from basic_cv_detection
+        # Initialize camera
         try:
-            self.camera = gstCamera(1280, 720, "/dev/video0")
+            self.camera = jetson.utils.gstCamera(1280, 720, "/dev/video0")
             self.get_logger().info("Successfully initialized USB webcam")
         except Exception as e:
             self.get_logger().error(f"Failed to initialize camera: {str(e)}")
             raise
             
         # Initialize display
-        self.display = glDisplay()
-        if not self.display.IsOpen():
-            self.get_logger().error("Failed to open display window")
-            raise RuntimeError("Display initialization failed")
+        try:
+            self.display = jetson.utils.glDisplay()
+            if not self.display.IsOpen():
+                raise RuntimeError("Display initialization failed")
+            self.get_logger().info("Successfully initialized display")
+        except Exception as e:
+            self.get_logger().error(f"Failed to initialize display: {str(e)}")
+            raise
             
         # Create timer for detection
         self.create_timer(0.1, self.detection_callback)  # 10Hz detection rate
         self.get_logger().info('YOLOv8 Detection Node Initialized')
-    
+
     def detection_callback(self):
         try:
             # Capture frame in RGBA format
@@ -61,14 +66,13 @@ class YOLODetectionNode(Node):
             # Log input frame info
             self.get_logger().debug(f'Input frame: {width}x{height} format={frame.format}')
             
-            # Create resized input for the model (640x640)
-            input_frame = jetson.utils.cudaAllocMapped(width=640, height=640, format="rgba32f")
-            
-            # Resize the input frame
-            jetson.utils.cudaResize(frame, input_frame)
+            # Convert frame to CUDA format and resize
+            cuda_frame = frame  # frame is already a CUDA tensor from gstCamera
+            resized_frame = jetson.utils.cudaAllocMapped(width=640, height=640, format='rgba32f')
+            jetson.utils.cudaResize(cuda_frame, resized_frame)
             
             # Run detection on resized input
-            detections = self.net.Detect(input_frame)  # Let detectNet handle dimensions internally
+            detections = self.net.Detect(resized_frame)
             
             # Process detections and scale coordinates back to original frame size
             detection_results = []
@@ -102,7 +106,7 @@ class YOLODetectionNode(Node):
                 self.detection_publisher.publish(msg)
                 self.get_logger().debug(f'Published detections: {msg.data}')
             
-            # Display the frame with detections (original frame with overlays)
+            # Display the frame with detections
             self.display.RenderOnce(frame, width, height)
             self.display.SetTitle(f"Traffic Sign Detection | Network {self.net.GetNetworkFPS():.0f} FPS")
             

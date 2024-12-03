@@ -15,31 +15,30 @@ def convert_yolo_model():
         print(f"Loading model from {model_path}")
         model = YOLO(model_path)
         
-        # Export to TensorRT format with specific output names
-        trt_path = os.path.join(current_dir, 'models', 'best.trt')
+        # Export to ONNX format with settings optimized for TensorRT conversion
+        onnx_path = os.path.join(current_dir, 'models', 'best.onnx')
+        print("\nConverting to ONNX...")
         
-        # Export with specific settings for TensorRT and jetson.inference
-        success = model.export(format='trt', 
-                             opset=11,      # TensorRT compatible
-                             simplify=True,  # Simplify model graph
-                             dynamic=False,  # Fixed batch size for better compatibility
-                             imgsz=640,     # Fixed image size
-                             output_names=['output0', 'bboxes', 'scores', 'labels'])  # Match expected names
+        success = model.export(format='onnx',
+                             opset=11,        # TensorRT compatible opset
+                             simplify=True,    # Simplify model graph
+                             dynamic=False,    # Fixed batch size
+                             imgsz=640,        # Fixed image size
+                             half=True,        # FP16 for better performance
+                             input_names=['images'],
+                             output_names=['output0'])
         
         if success:
-            print(f"Successfully exported model to {trt_path}")
-            print("\nVerifying model structure...")
+            print(f"\nSuccessfully exported ONNX model to {onnx_path}")
+            print(f"ONNX file size: {os.path.getsize(onnx_path)/1024/1024:.2f} MB")
             
-            # Print model verification steps
-            print("\nTo verify the model on Jetson:")
-            print("1. Check TensorRT model:")
-            print("   /usr/src/tensorrt/bin/trtexec --trt=best.trt --verbose")
-            print("\n2. Look for these in the output:")
-            print("   - Input shape should be: (1, 3, 640, 640)")
-            print("   - Should see output layers: output0, bboxes, scores, labels")
+            print("\nNext steps:")
+            print("1. Copy the ONNX model to your Jetson")
+            print("2. On the Jetson, convert to TensorRT engine:")
+            print("   trtexec --onnx=best.onnx --saveEngine=best.engine --fp16 --workspace=4096")
             return True
         else:
-            print("Export failed")
+            print("ONNX export failed")
             return False
             
     except Exception as e:
@@ -47,10 +46,4 @@ def convert_yolo_model():
         return False
 
 if __name__ == '__main__':
-    if convert_yolo_model():
-        print("\nNext steps:")
-        print("1. Push to git and pull on Jetson")
-        print("2. Run model verification command on Jetson")
-        print("3. Update detection node if needed based on verification output")
-    else:
-        print("\nConversion failed. Please check the error messages above.")
+    convert_yolo_model()
