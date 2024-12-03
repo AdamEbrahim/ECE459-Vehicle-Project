@@ -2,12 +2,11 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
-from vision_msgs.msg import DetectedObjects
 import jetson.inference
 import jetson.utils
 import threading
-import time
 import json
+import time
 import os
 import signal
 
@@ -16,7 +15,7 @@ class YOLODetectionNode(Node):
         super().__init__('yolo_detection')
         
         # Create publisher
-        self.publisher_ = self.create_publisher(DetectedObjects, 'detected_objects', 10)
+        self.publisher_ = self.create_publisher(String, 'detected_objects', 10)
         
         # Parameters
         self.declare_parameter('confidence_threshold', 0.6)
@@ -98,49 +97,43 @@ class YOLODetectionNode(Node):
             raise RuntimeError(f'Failed to initialize: {str(e)}')
 
     def process_detections(self, detections):
-        """Process detections and create ROS message."""
-        detected_objects_msg = DetectedObjects()
-        detected_objects_msg.header.stamp = self.get_clock().now().to_msg()
-        detected_objects_msg.header.frame_id = "camera"
-
+        """Process detections and create JSON message."""
+        detection_msg = {
+            'timestamp': time.time(),
+            'detections': []
+        }
+        
         for detection in detections:
-            # Extract information from detection
-            class_id = detection.ClassID
-            confidence = detection.Confidence
-            left = detection.Left
-            right = detection.Right
-            top = detection.Top
-            bottom = detection.Bottom
-
-            # Create DetectedObject message
-            obj = DetectedObject()
-            obj.class_id = class_id
-            obj.class_name = detection.ClassLabel
-            obj.confidence = confidence
-            obj.x = (left + right) / 2.0  # center x
-            obj.y = (top + bottom) / 2.0   # center y
-            obj.width = right - left
-            obj.height = bottom - top
-
-            detected_objects_msg.objects.append(obj)
-
-        return detected_objects_msg
+            det_info = {
+                'class': detection.ClassLabel,
+                'confidence': float(detection.Confidence),
+                'bbox': {
+                    'left': int(detection.Left),
+                    'top': int(detection.Top),
+                    'right': int(detection.Right),
+                    'bottom': int(detection.Bottom)
+                }
+            }
+            detection_msg['detections'].append(det_info)
+            self.get_logger().info(f'Detected: {det_info["class"]} ({det_info["confidence"]:.2f})')
+        
+        return json.dumps(detection_msg)
 
     def run_detection_loop(self):
         """Main detection loop"""
         try:
-            while self.running and self.display.IsOpen():
-                # Capture frame
-                img, width, height = self.camera.CaptureRGBA()
+            while rclpy.ok():
+                # Capture image
+                img, width, height = self.camera.CaptureRGBA(zeroCopy=1)
                 
-                # Run detection
+                # Detect objects
                 detections = self.net.Detect(img, width, height)
                 
                 # Process detections
                 if detections:
-                    detected_objects_msg = self.process_detections(detections)
-                    # Publish detections
-                    self.publisher_.publish(detected_objects_msg)
+                    msg = String()
+                    msg.data = self.process_detections(detections)
+                    self.publisher_.publish(msg)
                 
                 # Display the image
                 self.display.RenderOnce(img, width, height)
