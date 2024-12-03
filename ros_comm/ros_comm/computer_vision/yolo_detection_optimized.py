@@ -60,11 +60,11 @@ class YOLODetectionNode(Node):
             # Create resized input for the model (640x640)
             input_frame = jetson.utils.cudaAllocMapped(width=640, height=640, format='rgba8')
             
-            # Calculate scale factor
-            scale = min(640/width, 640/height)
-            
-            # Resize using scale factor
-            jetson.utils.cudaResize(frame, input_frame, scale)
+            # Resize the input frame
+            jetson.utils.cudaResize(src=frame, 
+                                  dst=input_frame,
+                                  width=640,
+                                  height=640)
             
             # Create output image for overlay
             output_frame = jetson.utils.cudaAllocMapped(width=width, height=height, format='rgba8')
