@@ -22,20 +22,15 @@ class YOLODetectionNode(Node):
             self.class_names = ['stop', 'yield', 'signalAhead', 'pedestrianCrossing', 'speedLimit25', 'speedLimit35']
             
             # Load model
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            model_path = os.path.join(current_dir, 'models', 'best.onnx')
+            model_path = os.path.expanduser('~/best_openvino_model_6n')
+            self.net = jetson.inference.detectNet(model=model_path, 
+                                                labels=','.join(self.class_names),
+                                                input_blob='images',
+                                                output_cvg='output_1',
+                                                output_bbox='output_2',
+                                                threshold=0.5)
             
-            # Configure network settings with more detailed parameters
-            self.net = jetson.inference.detectNet(argv=[
-                '--model=' + model_path,
-                '--input-blob=images',
-                '--output-blob=output0',
-                '--input-width=640',
-                '--input-height=640',
-                '--threshold=0.5'
-            ])
-            
-            self.get_logger().info(f'Model loaded from: {model_path}')
+            self.get_logger().info("Successfully loaded model")
         except Exception as e:
             self.get_logger().error(f"Failed to load model: {str(e)}")
             raise
@@ -64,7 +59,7 @@ class YOLODetectionNode(Node):
             frame, width, height = self.camera.CaptureRGBA()
             
             # Log input frame info
-            self.get_logger().info(f'Input frame: {width}x{height} format={frame.format}')
+            self.get_logger().debug(f'Input frame: {width}x{height} format={frame.format}')
             
             # Create resized input for the model (640x640)
             input_frame = jetson.utils.cudaAllocMapped(width=640, height=640, format="rgba32f")
@@ -72,23 +67,21 @@ class YOLODetectionNode(Node):
             # Resize the input frame
             jetson.utils.cudaResize(frame, input_frame)
             
-            # Create output image for overlay
-            output_frame = jetson.utils.cudaAllocMapped(width=width, height=height, format="rgba32f")
-            jetson.utils.cudaMemcpy(output_frame, frame)  # Copy original frame
+            # Run detection on resized input
+            detections = self.net.Detect(input_frame)  # Let detectNet handle dimensions internally
             
-            # Run detection on resized input - use positional args
-            detections = self.net.Detect(input_frame, 640, 640, output_frame)
-            
-            # Process detections
+            # Process detections and scale coordinates back to original frame size
             detection_results = []
             for detection in detections:
                 class_id = int(detection.ClassID)
                 if class_id < len(self.class_names):
                     # Scale detection coordinates back to original size
-                    left = detection.Left
-                    top = detection.Top
-                    det_width = detection.Width
-                    det_height = detection.Height
+                    scale_x = width / 640
+                    scale_y = height / 640
+                    left = detection.Left * scale_x
+                    top = detection.Top * scale_y
+                    det_width = detection.Width * scale_x
+                    det_height = detection.Height * scale_y
                     
                     detection_results.append({
                         'class': self.class_names[class_id],
@@ -109,8 +102,8 @@ class YOLODetectionNode(Node):
                 self.detection_publisher.publish(msg)
                 self.get_logger().debug(f'Published detections: {msg.data}')
             
-            # Display the frame with detections
-            self.display.RenderOnce(output_frame, width, height)
+            # Display the frame with detections (original frame with overlays)
+            self.display.RenderOnce(frame, width, height)
             self.display.SetTitle(f"Traffic Sign Detection | Network {self.net.GetNetworkFPS():.0f} FPS")
             
         except Exception as e:
