@@ -2,6 +2,7 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
+from vision_msgs.msg import DetectedObjects
 import jetson.inference
 import jetson.utils
 import threading
@@ -15,7 +16,7 @@ class YOLODetectionNode(Node):
         super().__init__('yolo_detection')
         
         # Create publisher
-        self.publisher_ = self.create_publisher(String, 'detected_objects', 10)
+        self.publisher_ = self.create_publisher(DetectedObjects, 'detected_objects', 10)
         
         # Parameters
         self.declare_parameter('confidence_threshold', 0.6)
@@ -59,12 +60,12 @@ class YOLODetectionNode(Node):
             self.get_logger().info(f'Model file size: {os.path.getsize(model_path)} bytes')
             
             try:
-                # Initialize the detection network with YOLO v8 blob names
+                # Initialize the detection network with correct parameter names
                 self.net = jetson.inference.detectNet(
                     model=model_path,
                     labels=labels_path,
-                    input_blob='images',
-                    output_blob='output0',
+                    input_name='images',
+                    output_names=['output0'],
                     threshold=self.detection_threshold
                 )
                 self.get_logger().info('Successfully loaded model with YOLO v8 naming')
@@ -96,6 +97,35 @@ class YOLODetectionNode(Node):
             self.get_logger().error(f'Failed to initialize: {str(e)}')
             raise RuntimeError(f'Failed to initialize: {str(e)}')
 
+    def process_detections(self, detections):
+        """Process detections and create ROS message."""
+        detected_objects_msg = DetectedObjects()
+        detected_objects_msg.header.stamp = self.get_clock().now().to_msg()
+        detected_objects_msg.header.frame_id = "camera"
+
+        for detection in detections:
+            # Extract information from detection
+            class_id = detection.ClassID
+            confidence = detection.Confidence
+            left = detection.Left
+            right = detection.Right
+            top = detection.Top
+            bottom = detection.Bottom
+
+            # Create DetectedObject message
+            obj = DetectedObject()
+            obj.class_id = class_id
+            obj.class_name = detection.ClassLabel
+            obj.confidence = confidence
+            obj.x = (left + right) / 2.0  # center x
+            obj.y = (top + bottom) / 2.0   # center y
+            obj.width = right - left
+            obj.height = bottom - top
+
+            detected_objects_msg.objects.append(obj)
+
+        return detected_objects_msg
+
     def run_detection_loop(self):
         """Main detection loop"""
         try:
@@ -108,29 +138,9 @@ class YOLODetectionNode(Node):
                 
                 # Process detections
                 if detections:
-                    detection_msg = {
-                        'timestamp': time.time(),
-                        'detections': []
-                    }
-                    
-                    for detection in detections:
-                        det_info = {
-                            'class': self.net.GetClassDesc(detection.ClassID),
-                            'confidence': float(detection.Confidence),
-                            'bbox': {
-                                'left': int(detection.Left),
-                                'top': int(detection.Top),
-                                'right': int(detection.Right),
-                                'bottom': int(detection.Bottom)
-                            }
-                        }
-                        detection_msg['detections'].append(det_info)
-                        self.get_logger().info(f'Detected: {det_info["class"]} ({det_info["confidence"]:.2f})')
-                    
+                    detected_objects_msg = self.process_detections(detections)
                     # Publish detections
-                    msg = String()
-                    msg.data = json.dumps(detection_msg)
-                    self.publisher_.publish(msg)
+                    self.publisher_.publish(detected_objects_msg)
                 
                 # Display the image
                 self.display.RenderOnce(img, width, height)
