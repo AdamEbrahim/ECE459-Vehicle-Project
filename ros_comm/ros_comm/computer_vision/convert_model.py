@@ -15,19 +15,28 @@ def convert_yolo_model():
         print(f"Loading model from {model_path}")
         model = YOLO(model_path)
         
-        # Export to ONNX format
-        onnx_path = os.path.join(current_dir, 'models', 'best.onnx')
+        # Export to TensorRT format with specific output names
+        trt_path = os.path.join(current_dir, 'models', 'best.trt')
         
-        # Export with specific settings for TensorRT
-        success = model.export(format='onnx', 
+        # Export with specific settings for TensorRT and jetson.inference
+        success = model.export(format='trt', 
                              opset=11,      # TensorRT compatible
                              simplify=True,  # Simplify model graph
                              dynamic=False,  # Fixed batch size for better compatibility
-                             imgsz=640)     # Fixed image size
+                             imgsz=640,     # Fixed image size
+                             output_names=['output0', 'bboxes', 'scores', 'labels'])  # Match expected names
         
         if success:
-            print(f"Successfully exported model to {onnx_path}")
-            print("You can now copy this model to your Jetson")
+            print(f"Successfully exported model to {trt_path}")
+            print("\nVerifying model structure...")
+            
+            # Print model verification steps
+            print("\nTo verify the model on Jetson:")
+            print("1. Check TensorRT model:")
+            print("   /usr/src/tensorrt/bin/trtexec --trt=best.trt --verbose")
+            print("\n2. Look for these in the output:")
+            print("   - Input shape should be: (1, 3, 640, 640)")
+            print("   - Should see output layers: output0, bboxes, scores, labels")
             return True
         else:
             print("Export failed")
@@ -40,8 +49,8 @@ def convert_yolo_model():
 if __name__ == '__main__':
     if convert_yolo_model():
         print("\nNext steps:")
-        print("1. Copy the exported model to your Jetson:")
-        print("   scp models/best.onnx ece459@ece459-desktop:~/ros2_ws/install/ros_comm/lib/python3.6/site-packages/ros_comm/computer_vision/models/")
-        print("\n2. Update the model path in yolo_detection_optimized.py to use 'best.onnx'")
+        print("1. Push to git and pull on Jetson")
+        print("2. Run model verification command on Jetson")
+        print("3. Update detection node if needed based on verification output")
     else:
         print("\nConversion failed. Please check the error messages above.")

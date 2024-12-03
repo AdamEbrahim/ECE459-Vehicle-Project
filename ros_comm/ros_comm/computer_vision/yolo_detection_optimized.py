@@ -21,18 +21,30 @@ class YOLODetectionNode(Node):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         model_path = os.path.join(current_dir, 'models', 'best.onnx')
         
-        # Configure network settings
+        # Configure network settings with more detailed parameters
         self.net = jetson.inference.detectNet(argv=[
             '--model=' + model_path,
-            '--input-blob=images',     # Input tensor name from ONNX
-            '--output-cvg=output0',    # Output tensor name from ONNX
+            '--labels=' + os.path.join(current_dir, 'models', 'labels.txt'),
+            '--input-blob=images',
+            '--output-blob=output0',
+            '--output-cvg=scores',
+            '--output-bbox=bboxes',
             '--input-width=640',
             '--input-height=640',
-            '--threshold=0.5'          # Detection confidence threshold
+            '--threshold=0.5'
         ])
         
-        # Initialize camera
-        self.camera = jetson.utils.videoSource("csi://0")
+        # Initialize camera (try different formats if CSI fails)
+        try:
+            self.camera = jetson.utils.videoSource("csi://0")
+        except Exception as e:
+            self.get_logger().warn(f"CSI camera failed, trying V4L2: {str(e)}")
+            try:
+                self.camera = jetson.utils.videoSource("/dev/video0")
+            except Exception as e2:
+                self.get_logger().error(f"V4L2 also failed: {str(e2)}")
+                raise RuntimeError("No camera available")
+        
         self.display = jetson.utils.videoOutput("display://0")
         
         # Class mapping
