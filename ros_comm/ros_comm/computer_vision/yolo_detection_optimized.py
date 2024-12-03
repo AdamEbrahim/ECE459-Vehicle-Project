@@ -15,23 +15,30 @@ class YOLODetectionNode(Node):
         
         # Initialize publishers and subscribers
         self.detection_publisher = self.create_publisher(String, 'detection_data', 10)
-        self.create_timer(0.1, self.detection_callback)  # 10Hz detection rate
         
-        # Load YOLO model using TensorRT
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        model_path = os.path.join(current_dir, 'models', 'best.onnx')
-        
-        # Configure network settings with more detailed parameters
-        self.net = jetson.inference.detectNet(argv=[
-            '--model=' + model_path,
-            '--input-blob=images',
-            '--output-blob=output0',
-            '--input-width=640',
-            '--input-height=640',
-            '--threshold=0.5'
-        ])
-        
-        self.get_logger().info(f'Model loaded from: {model_path}')
+        # Initialize model
+        try:
+            # Define class names
+            self.class_names = ['stop', 'yield', 'signalAhead', 'pedestrianCrossing', 'speedLimit25', 'speedLimit35']
+            
+            # Load model
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            model_path = os.path.join(current_dir, 'models', 'best.onnx')
+            
+            # Configure network settings with more detailed parameters
+            self.net = jetson.inference.detectNet(argv=[
+                '--model=' + model_path,
+                '--input-blob=images',
+                '--output-blob=output0',
+                '--input-width=640',
+                '--input-height=640',
+                '--threshold=0.5'
+            ])
+            
+            self.get_logger().info(f'Model loaded from: {model_path}')
+        except Exception as e:
+            self.get_logger().error(f"Failed to load model: {str(e)}")
+            raise
         
         # Initialize camera using the working approach from basic_cv_detection
         try:
@@ -39,17 +46,16 @@ class YOLODetectionNode(Node):
             self.get_logger().info("Successfully initialized USB webcam")
         except Exception as e:
             self.get_logger().error(f"Failed to initialize camera: {str(e)}")
-            raise RuntimeError("Camera initialization failed")
+            raise
             
         # Initialize display
         self.display = glDisplay()
         if not self.display.IsOpen():
             self.get_logger().error("Failed to open display window")
             raise RuntimeError("Display initialization failed")
-        
-        # Class mapping (hardcoded since these are our specific classes)
-        self.class_names = ['stop', 'yield', 'signalAhead', 'pedestrianCrossing', 'speedLimit25', 'speedLimit35']
-        
+            
+        # Create timer for detection
+        self.create_timer(0.1, self.detection_callback)  # 10Hz detection rate
         self.get_logger().info('YOLOv8 Detection Node Initialized')
     
     def detection_callback(self):
@@ -61,21 +67,17 @@ class YOLODetectionNode(Node):
             self.get_logger().info(f'Input frame: {width}x{height} format={frame.format}')
             
             # Create resized input for the model (640x640)
-            input_frame = cudaAllocMapped(width=640, height=640, format='rgba32f')
+            input_frame = jetson.utils.cudaAllocMapped(width=640, height=640, format="rgba32f")
             
-            # Resize the input frame (using positional args: input, output)
-            cudaResize(frame, input_frame)
+            # Resize the input frame
+            jetson.utils.cudaResize(frame, input_frame)
             
             # Create output image for overlay
-            output_frame = cudaAllocMapped(width=width, height=height, format='rgba32f')
-            cudaMemcpy(output_frame, frame)  # Copy original frame
+            output_frame = jetson.utils.cudaAllocMapped(width=width, height=height, format="rgba32f")
+            jetson.utils.cudaMemcpy(output_frame, frame)  # Copy original frame
             
-            # Run detection on resized input
-            detections = self.net.Detect(input_frame, 640, 640, overlay=output_frame)
-            
-            # Scale factor to map detections back to original size
-            scale_x = width / 640
-            scale_y = height / 640
+            # Run detection on resized input - use positional args
+            detections = self.net.Detect(input_frame, 640, 640, output_frame)
             
             # Process detections
             detection_results = []
@@ -83,10 +85,10 @@ class YOLODetectionNode(Node):
                 class_id = int(detection.ClassID)
                 if class_id < len(self.class_names):
                     # Scale detection coordinates back to original size
-                    left = detection.Left * scale_x
-                    top = detection.Top * scale_y
-                    det_width = detection.Width * scale_x
-                    det_height = detection.Height * scale_y
+                    left = detection.Left
+                    top = detection.Top
+                    det_width = detection.Width
+                    det_height = detection.Height
                     
                     detection_results.append({
                         'class': self.class_names[class_id],
@@ -107,9 +109,9 @@ class YOLODetectionNode(Node):
                 self.detection_publisher.publish(msg)
                 self.get_logger().debug(f'Published detections: {msg.data}')
             
-            # Display output
+            # Display the frame with detections
             self.display.RenderOnce(output_frame, width, height)
-            self.display.SetTitle(f"Object Detection | Network {self.net.GetNetworkFPS():.0f} FPS")
+            self.display.SetTitle(f"Traffic Sign Detection | Network {self.net.GetNetworkFPS():.0f} FPS")
             
         except Exception as e:
             self.get_logger().error(f'Detection error: {str(e)}')
