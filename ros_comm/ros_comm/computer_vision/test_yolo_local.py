@@ -13,7 +13,7 @@ cap = cv2.VideoCapture(0)  # Use 0 for built-in webcam, 1 for external camera
 
 # Adjust these parameters
 CONFIDENCE_THRESHOLD = 0.5  # Minimum confidence to display detection
-FRAME_DELAY = 0.5  # Time delay (in seconds) between frames
+FRAME_DELAY = 0.01  # Time delay (in seconds) between frames
 
 while cap.isOpened():
     ret, frame = cap.read()
