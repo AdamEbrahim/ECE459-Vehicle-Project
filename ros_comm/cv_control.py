@@ -20,7 +20,18 @@ class ObjectDetectionPublisher(Node):
         self.detection_thread.daemon = True
         self.detection_thread.start()
 
-        self.valid_objects = ['stop sign']
+        # self.valid_objects = ['stop sign', 'dog', 'sheep', 'cat', 'elephant', 'person', 'bird', 'giraffe']
+        # Define the mapping of detected objects to classifications
+        self.object_to_classification = {
+            'stop sign': 'stopSign',
+            'dog': 'trafficLightGreen',
+            'sheep': 'speedLimit50',
+            'cat': 'trafficLightRed',
+            'elephant': 'speedLimit20',
+            'person': 'pedestrianCrossing',
+            'bird': 'speedLimit100',
+            'giraffe': 'speedLimit70'
+        }
 
     def run_detection_loop(self):
         while True:
@@ -29,9 +40,10 @@ class ObjectDetectionPublisher(Node):
             
             for detection in detections:
                 class_name = self.net.GetClassDesc(detection.ClassID)
-                if class_name in self.valid_objects:                    
-                        self.get_logger().info("Valid Object Detected!")
-                        self.publish_detection(str(class_name))
+                if class_name in self.object_to_classification:                    
+                        classification = self.object_to_classification[class_name]
+                        self.get_logger().info(f"Detected {class_name}, classified as {classification}")
+                        self.publish_detection(classification)
                 else:
                         self.get_logger().info("No Object!")
                         self.publish_detection("Cleared!")
