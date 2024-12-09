@@ -2,9 +2,8 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
-
 class StatusConsolidator(Node):
-
+    """Node that consolidates status messages from the user control and object detection nodes."""
     def __init__(self):
         super().__init__('status_consolidator')
 

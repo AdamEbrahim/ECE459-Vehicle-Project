@@ -4,7 +4,6 @@ from std_msgs.msg import String
 import jetson.inference
 import jetson.utils
 import threading
-import time
 
 class ObjectDetectionPublisher(Node):
     def __init__(self):
@@ -48,7 +47,7 @@ class ObjectDetectionPublisher(Node):
                 bbox_area = bbox_width * bbox_height
                 
                 if class_name in self.object_to_classification:
-                        if bbox_area > self.min_bbox_area:            
+                        if bbox_area > self.min_bbox_area: # Only publish if the bounding box area is large enough          
                             classification = self.object_to_classification[class_name]
                             self.get_logger().info(f"Detected {class_name}, classified as {classification}")
                             self.publish_detection(classification)
