@@ -62,6 +62,10 @@ class MinimalSubscriber(Node):
         super().__init__('minimal_subscriber')
         self.bus = SMBus(1)
         self.addr = 0x48
+        self.speed = 0
+        self.send_speed = 0
+        self.red_light = 0
+        self.stop_sign = 0
         
         self.is_object_detected = False
 
@@ -82,43 +86,47 @@ class MinimalSubscriber(Node):
 
     def listener_callback_1(self, msg):
         data = msg.data
-
-        if self.is_object_detected:
-            if data == 'FORWARD':
-                self.get_logger().info('Ignored FORWARD command: Object detected!')
-            else:
-                # Process other movement commands normally
-                if data == 'LEFT':
-                    self.get_logger().info('Turning Left')
-                    self.bus.write_byte(self.addr, 2)
-                elif data == 'RIGHT':
-                    self.get_logger().info('Turning Right')
-                    self.bus.write_byte(self.addr, 3)
-                elif data == 'BACKWARD':
-                    self.get_logger().info('Motors Moving Backward')
-                    self.bus.write_byte(self.addr, 4)
-
+        split_data = data.split(' ')
+        self.new_speed = self.speed
+   
+        if split_data[0] == 'Red':
+            self.red_light = 1
         else:
-            if data == 'FORWARD':
-                self.get_logger().info('Motors Moving Forward')
-                self.bus.write_byte(self.addr, 1)
-            elif data == 'LEFT':
-                self.get_logger().info('Turning Left')
-                self.bus.write_byte(self.addr, 2)
-            elif data == 'RIGHT':
-                self.get_logger().info('Turning Right')
-                self.bus.write_byte(self.addr, 3)
-            elif data == 'BACKWARD':
-                self.get_logger().info('Motors Moving Backward')
-                self.bus.write_byte(self.addr, 4)
+            self.red_light = 0
+
+        if split_data[0] == 'Speed':
+            self.speed = int(split_data[2])
+            self.new_speed = self.speed
+        elif split_data[0] == 'Pedestrian':
+            self.new_speed = self.speed // 2
+      
+        if self.red_light or data == 'Nothing':
+            self.bus.write_byte(self.addr, 0)
+    
+        elif data == 'Forward':
+            self.get_logger().info('Motors Moving Forward')
+            self.bus.write_byte(self.addr, 1)
+        elif data == 'Left':
+            self.get_logger().info('Turning Left')
+            self.bus.write_byte(self.addr, 2)
+        elif data == 'Right':
+            self.get_logger().info('Turning Right')
+            self.bus.write_byte(self.addr, 3)
+        elif data == 'Backward':
+            self.get_logger().info('Motors Moving Backward')
+            self.bus.write_byte(self.addr, 4)
+           
+        self.bus.write_byte(self.addr, self.new_speed)
+        self.bus.write_byte(self.addr, self.stop_sign)
 
     def listener_callback_2(self, msg):
         data = msg.data
-        if data == 'Person Detected':
-            self.get_logger().info('Object detected, disabling FORWARD movement')
-            self.is_object_detected = True
+        if data == 'stop sign':
+            self.get_logger().info('Stop Sign Detected')
+            self.stop_sign = 1
         else:
-            self.is_object_detected = False
+            self.stop_sign = 0
+            self.is_object_detected = False	
             self.get_logger().info('Object no longer detected, all movements allowed')
 
 def main(args=None):

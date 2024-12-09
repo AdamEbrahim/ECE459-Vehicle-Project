@@ -43,11 +43,23 @@ class MinimalPublisher(Node):
             elif decode_data == 'a':
                 response = 'Left'
             elif decode_data == 's':
-                response = 'Down'
+                response = 'Backward'
             elif decode_data == 'd':
                 response = 'Right'
+            elif decode_data == 'f':
+                response = 'Speed Limit 30'
+            elif decode_data == 'g':
+                response = 'Speed Limit 50'
+            elif decode_data == 'h':
+                response = 'Speed Limit 70'
+            elif decode_data == 'j':
+                response = 'Stop Sign'
+            elif decode_data == 'k':
+                response = 'Red Light'
+            elif decode_data == 'l':
+                response = 'Green Light'
             else:
-                response = old_response
+                response = 'Nothing'
 
             old_response = decode_data
             self.get_logger().info(f'Received: {decode_data}')
@@ -83,4 +95,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
