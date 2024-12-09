@@ -12,6 +12,7 @@ class ObjectDetectionPublisher(Node):
         self.publisher_ = self.create_publisher(String, 'detected_objects', 10)
         self.timer_period = 1.0  # seconds
         self.detection_threshold = 0.5  # Minimum threshold for detection confidence
+        self.min_bbox_area = 5000  # Minimum bounding box area to publish
         self.net = jetson.inference.detectNet("ssd-mobilenet-v2", threshold=self.detection_threshold)
         self.camera = jetson.utils.gstCamera(1280, 720, "/dev/video0")
  #       self.display = jetson.utils.glDisplay()
@@ -40,10 +41,20 @@ class ObjectDetectionPublisher(Node):
             
             for detection in detections:
                 class_name = self.net.GetClassDesc(detection.ClassID)
-                if class_name in self.object_to_classification:                    
-                        classification = self.object_to_classification[class_name]
-                        self.get_logger().info(f"Detected {class_name}, classified as {classification}")
-                        self.publish_detection(classification)
+
+                # Calculate bounding box area
+                bbox_width = detection.Right - detection.Left
+                bbox_height = detection.Bottom - detection.Top
+                bbox_area = bbox_width * bbox_height
+                
+                if class_name in self.object_to_classification:
+                        if bbox_area > self.min_bbox_area:            
+                            classification = self.object_to_classification[class_name]
+                            self.get_logger().info(f"Detected {class_name}, classified as {classification}")
+                            self.publish_detection(classification)
+                        else:
+                            self.get_logger().info(f"Object {class_name} ignored (Area: {bbox_area} too small)")
+
                 else:
                         self.get_logger().info("No Object!")
                         self.publish_detection("Cleared!")
