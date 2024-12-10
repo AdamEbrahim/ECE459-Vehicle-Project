@@ -100,9 +100,6 @@ class MinimalSubscriber(Node):
             self.get_logger().info('No relevant object detected, normal operation')
             self.stop_sign = 0 # is not a stop sign, reset flag
 
-        # Update ESP with the latest speed
-        self.bus.write_byte(self.addr, self.speed)
-
 def main(args=None):
     rclpy.init(args=args)
 
