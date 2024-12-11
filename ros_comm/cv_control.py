@@ -12,13 +12,16 @@ class ObjectDetectionPublisher(Node):
         self.publisher_ = self.create_publisher(String, 'detected_objects', 10)
         self.timer_period = 1.0  # seconds
         # self.frame_count = 0
-        # self.frame_skip = 30   # keep frame rate at 1/3 rate
+        # self.detection_frequency = 10 # detect at 10 Hz
         self.detection_threshold = 0.5  # Minimum threshold for detection confidence
-        self.stop_sign_threshold = 0.7  # Min threshold for stop detection confidence
+        self.stop_sign_threshold = 0.75  # Min threshold for stop detection confidence
+        self.cat_threshold = 0.6
         self.min_bbox_area = 50000  # Minimum bounding box area to publish
+        
         self.net = jetson.inference.detectNet("ssd-mobilenet-v2", threshold=self.detection_threshold)
         self.camera = jetson.utils.gstCamera(1280, 720, "/dev/video0")
         # self.camera = jetson.utils.gstCamera(640, 480, "/dev/video0")
+
 
         self.gst_pipeline = "v4l1src device=/dev/video0 ! video/x-raw,width=1280,height=720,framerate=10/1 ! videoconvert !appsink"
         self.display = jetson.utils.glDisplay()
@@ -32,13 +35,21 @@ class ObjectDetectionPublisher(Node):
         self.object_to_classification = {
             'stop sign': 'stopSign',
             'dog': 'trafficLightGreen',
-            'sheep': 'speedLimit50',
+            'clock': 'speedLimit50',
             'cat': 'trafficLightRed',
-            'elephant': 'speedLimit20',
-        #    'person': 'pedestrianCrossing',
-            'bird': 'speedLimit100',
-            'giraffe': 'speedLimit70'
+            'teddy bear': 'speedLimit20',
+            'bottle': 'speedLimit100'
+            # 'sheep': 'speedLimit70'
         }
+
+        self.min_areas = {
+            'stop sign': 43000,
+            'dog': 80000,
+            'bottle': 140000,
+            'cat': 80000,
+            'teddy bear': 36000,
+            'clock': 45000
+         }
 
     def run_detection_loop(self):
 
@@ -63,8 +74,9 @@ class ObjectDetectionPublisher(Node):
                 bbox_area = bbox_width * bbox_height
                 
                 if class_name in self.object_to_classification:
-                        if bbox_area > self.min_bbox_area: # Only publish if the bounding box area is large enough          
-                            if class_name == 'stop_sign' and detection.Confidence < self.stop_sign_threshold:
+                        # if bbox_area > self.min_bbox_area: # Only publish if the bounding box area is large enough     
+                        if bbox_area >= self.min_areas[class_name]:     
+                            if (class_name == 'stop_sign' and detection.Confidence < self.stop_sign_threshold) or (class_name == 'cat' and detection.Confidence < self.cat_threshold):
                                 continue
 
                             classification = self.object_to_classification[class_name]

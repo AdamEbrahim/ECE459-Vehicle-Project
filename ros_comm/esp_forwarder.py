@@ -38,12 +38,13 @@ class MinimalSubscriber(Node):
         if split_data[0] == 'Red': #laptop RED command
             self.get_logger().info('Red Light Inputed')
             self.red_light = 1
-
-        if split_data[0] == 'Speed': #laptop SPEED command
+        elif split_data[0] == 'Green': #laptop GREEN command
+            self.get_logger().info('Green Light Inputed')
+            self.red_light = 0
+        elif split_data[0] == 'Speed': #laptop SPEED command
             self.speed = int(split_data[2])
             self.new_speed = self.speed
             self.get_logger().info('Speed Inputed {}'.format(self.speed))
-
         elif split_data[0] == 'Pedestrian': #laptop PEDESTRIAN command
             self.get_logger().info('Pedestrian Inputted, halving speed')
             self.new_speed = self.speed // 2
@@ -64,9 +65,10 @@ class MinimalSubscriber(Node):
         elif data == 'Backward':
             self.get_logger().info('Motors Moving Backward')
             self.bus.write_byte(self.addr, 4)
-           
+
+        converted_speed = (int) ((self.new_speed / 100) * 180)
         # Write speed and stop sign state
-        self.bus.write_byte(self.addr, self.new_speed)
+        self.bus.write_byte(self.addr, converted_speed)
         self.bus.write_byte(self.addr, self.stop_sign) # send stop sign state to ESP
 
     def listener_callback_2(self, msg):
