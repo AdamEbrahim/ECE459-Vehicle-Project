@@ -2,6 +2,7 @@ import rclpy
 from rclpy.node import Node
 from smbus import SMBus
 from std_msgs.msg import String
+import time
 
 class MinimalSubscriber(Node):
 
@@ -59,9 +60,11 @@ class MinimalSubscriber(Node):
         elif data == 'Left':
             self.get_logger().info('Turning Left')
             self.bus.write_byte(self.addr, 2)
+            self.new_speed = 15
         elif data == 'Right':
             self.get_logger().info('Turning Right')
             self.bus.write_byte(self.addr, 3)
+            self.new_speed = 15
         elif data == 'Backward':
             self.get_logger().info('Motors Moving Backward')
             self.bus.write_byte(self.addr, 4)
@@ -70,7 +73,7 @@ class MinimalSubscriber(Node):
         # Write speed and stop sign state
         self.bus.write_byte(self.addr, converted_speed)
         self.bus.write_byte(self.addr, self.stop_sign) # send stop sign state to ESP
-
+        #time.sleep(0.1)
     def listener_callback_2(self, msg):
         """Handles detected objects from the CV model."""
         data = msg.data
@@ -85,7 +88,7 @@ class MinimalSubscriber(Node):
             self.red_light = 0  # reset red light flag , Allow movement
         elif data == 'speedLimit20':
             self.get_logger().info('Speed Limit 20 Detected')
-            self.speed = 20
+            self.speed = 30
         elif data == 'speedLimit50':
             self.get_logger().info('Speed Limit 50 Detected')
             self.speed = 50
@@ -94,7 +97,7 @@ class MinimalSubscriber(Node):
             self.speed = 70
         elif data == 'speedLimit100':
             self.get_logger().info('Speed Limit 100 Detected')
-            self.speed = 100
+            self.speed = 80
         elif data == 'pedestrianCrossing':
             self.get_logger().info('Pedestrian Crossing Detected, halving speed')
             self.speed = max(self.speed // 2, 10)  # Reduce speed but not below 10

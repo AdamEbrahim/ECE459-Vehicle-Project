@@ -24,7 +24,7 @@ class ObjectDetectionPublisher(Node):
 
 
         self.gst_pipeline = "v4l1src device=/dev/video0 ! video/x-raw,width=1280,height=720,framerate=10/1 ! videoconvert !appsink"
-        self.display = jetson.utils.glDisplay()
+        # self.display = jetson.utils.glDisplay()
 
         self.detection_thread = threading.Thread(target=self.run_detection_loop)
         self.detection_thread.daemon = True
@@ -35,10 +35,10 @@ class ObjectDetectionPublisher(Node):
         self.object_to_classification = {
             'stop sign': 'stopSign',
             'dog': 'trafficLightGreen',
-            'clock': 'speedLimit50',
+            'clock': 'speedLimit100',
             'cat': 'trafficLightRed',
             'teddy bear': 'speedLimit20',
-            'bottle': 'speedLimit100'
+            'bottle': 'speedLimit50'
             # 'sheep': 'speedLimit70'
         }
 
@@ -48,7 +48,7 @@ class ObjectDetectionPublisher(Node):
             'bottle': 140000,
             'cat': 80000,
             'teddy bear': 36000,
-            'clock': 45000
+            'clock': 34500
          }
 
     def run_detection_loop(self):
@@ -76,24 +76,25 @@ class ObjectDetectionPublisher(Node):
                 if class_name in self.object_to_classification:
                         # if bbox_area > self.min_bbox_area: # Only publish if the bounding box area is large enough     
                         if bbox_area >= self.min_areas[class_name]:     
-                            if (class_name == 'stop_sign' and detection.Confidence < self.stop_sign_threshold) or (class_name == 'cat' and detection.Confidence < self.cat_threshold):
+                            if ((class_name == 'stop_sign' or class_name == 'clock') and detection.Confidence < self.stop_sign_threshold) or (class_name == 'cat' and detection.Confidence < self.cat_threshold):
                                 continue
 
                             classification = self.object_to_classification[class_name]
-                            self.get_logger().info(f"Detected {class_name}, classified as {classification}")
-                            self.get_logger().info(f"Area: {bbox_area}")
                             self.publish_detection(classification)
+                            self.get_logger().info(f"Detected {class_name}, classified as {classification} (Area: {bbox_area})\n")
+                            
                         else:
-                            self.get_logger().info(f"Object {class_name} ignored (Area: {bbox_area} too small)")
+                            self.get_logger().info(f"Object {class_name} ignored (Area: {bbox_area} too small)\n")
 
                 else:
-                        self.get_logger().info("No Object!")
                         self.publish_detection("Cleared!")
+                        self.get_logger().info("No Object!\n")
+
 
                 time.sleep(0.2)
 
-            self.display.RenderOnce(img, width, height)
-            self.display.SetTitle(f"Object Detection | Network {self.net.GetNetworkFPS():.0f} FPS")
+            # self.display.RenderOnce(img, width, height)
+            # self.display.SetTitle(f"Object Detection | Network {self.net.GetNetworkFPS():.0f} FPS")
 
     def publish_detection(self, detection_message):
         """Publish a message about the detection."""
