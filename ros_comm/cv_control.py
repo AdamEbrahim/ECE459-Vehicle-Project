@@ -11,8 +11,6 @@ class ObjectDetectionPublisher(Node):
         super().__init__('object_detection_publisher')
         self.publisher_ = self.create_publisher(String, 'detected_objects', 10)
         self.timer_period = 1.0  # seconds
-        # self.frame_count = 0
-        # self.detection_frequency = 10 # detect at 10 Hz
         self.detection_threshold = 0.5  # Minimum threshold for detection confidence
         self.stop_sign_threshold = 0.75  # Min threshold for stop detection confidence
         self.cat_threshold = 0.6
@@ -22,7 +20,6 @@ class ObjectDetectionPublisher(Node):
         self.camera = jetson.utils.gstCamera(1280, 720, "/dev/video0")
         # self.camera = jetson.utils.gstCamera(640, 480, "/dev/video0")
 
-
         self.gst_pipeline = "v4l1src device=/dev/video0 ! video/x-raw,width=1280,height=720,framerate=10/1 ! videoconvert !appsink"
         self.display = jetson.utils.glDisplay()
 
@@ -30,7 +27,6 @@ class ObjectDetectionPublisher(Node):
         self.detection_thread.daemon = True
         self.detection_thread.start()
 
-        # self.valid_objects = ['stop sign', 'dog', 'sheep', 'cat', 'elephant', 'person', 'bird', 'giraffe']
         # Define the mapping of detected objects to classifications
         self.object_to_classification = {
             'stop sign': 'stopSign',
@@ -57,13 +53,7 @@ class ObjectDetectionPublisher(Node):
 
             img, width, height = self.camera.CaptureRGBA()
 
-            # img_bgr = jetson.utils.cudaToNumpy(img, width, height, 4)
-            # img_bgr = cv2.cvtColor(img_bgr, cv2.COLOR_RGBA2BGR)
-
-            # resized_img = cv2.resized(img_bgr, (640, 360))
-
             detections = self.net.Detect(img, width, height)
-            # detections = self.net.Detect(resized_img, resized_img.shape[1], resized_img[0])
             
             for detection in detections:
                 class_name = self.net.GetClassDesc(detection.ClassID)
@@ -74,7 +64,6 @@ class ObjectDetectionPublisher(Node):
                 bbox_area = bbox_width * bbox_height
                 
                 if class_name in self.object_to_classification:
-                        # if bbox_area > self.min_bbox_area: # Only publish if the bounding box area is large enough     
                         if bbox_area >= self.min_areas[class_name]:     
                             if (class_name == 'stop_sign' and detection.Confidence < self.stop_sign_threshold) or (class_name == 'cat' and detection.Confidence < self.cat_threshold):
                                 continue
