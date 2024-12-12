@@ -22,7 +22,7 @@ class MinimalPublisher(Node):
 
     def start_server(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_socket.bind(('0.0.0.0', 12000))
+        server_socket.bind(('0.0.0.0', 12001))
         server_socket.listen(1)
         self.get_logger().info('Server is listening on port 12000')
 
@@ -47,11 +47,11 @@ class MinimalPublisher(Node):
             elif decode_data == 'd':
                 response = 'Right'
             elif decode_data == 'f':
-                response = 'Speed Limit 30'
+                response = 'Speed Limit 20'
             elif decode_data == 'g':
                 response = 'Speed Limit 50'
             elif decode_data == 'h':
-                response = 'Speed Limit 70'
+                response = 'Speed Limit 80'
             elif decode_data == 'j':
                 response = 'Stop Sign'
             elif decode_data == 'k':
@@ -95,3 +95,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
